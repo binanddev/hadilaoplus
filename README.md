@@ -162,6 +162,12 @@ Chọn nhân vật, sẵn sàng, bắt đầu và kiểm tra bài/vàng cập nh
   và backend đã báo Live; URL frontend phải khớp cả `https://` lẫn hostname.
 - **Backend vừa thức dậy:** chờ dịch vụ sẵn sàng, rồi tải lại frontend.
 - **Phòng cũ không còn sau restart/deploy:** về trang chủ và tạo phòng mới.
+- **`Unexpected token '<' ... is not valid JSON`:** API đang trả trang HTML thay vì JSON.
+  Mở URL backend `/api/health/`; nếu HTTP 400, kiểm tra `ALLOWED_HOSTS` có đúng hostname
+  backend thực tế, rồi deploy lại. Frontend mới sẽ báo lỗi cấu hình rõ hơn thay vì lỗi đọc JSON.
+
+Backend tự bổ sung hostname do Render cung cấp qua `RENDER_EXTERNAL_HOSTNAME` vào danh sách
+host hợp lệ; vẫn giữ `ALLOWED_HOSTS` cho các tên miền riêng. Không dùng `ALLOWED_HOSTS=*`.
 
 Render Free có thể ngủ sau khoảng 15 phút không có lưu lượng vào và mất khoảng một phút
 để thức lại. Nâng gói backend nếu cần luôn sẵn sàng; nâng gói không tự làm SQLite bền vững.
