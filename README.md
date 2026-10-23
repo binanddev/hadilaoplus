@@ -175,6 +175,96 @@ Chỉ bổ sung khi muốn giữ ván qua restart hoặc chạy backend nhiều 
 Code đã có sẵn hỗ trợ `DATABASE_URL` cho PostgreSQL và `REDIS_URL` cho Channels;
 có thể dùng mẫu `render.yaml` lúc đó. Không đưa file `.env` hoặc khóa bí mật lên Git.
 
+## Phương án khác: frontend Netlify + backend Render
+
+Frontend React/Vite/PlayCanvas có thể triển khai trên Netlify. Backend Django và WebSocket
+vẫn chạy trực tiếp trên Render; chưa cần Neon hay Redis với cấu hình một instance nói trên.
+Không cần cài thêm plugin Netlify cho frontend hiện tại.
+
+### 1. Backend giữ trên Render
+
+Làm theo phần tạo backend ở trên. **Root Directory đặt `backend` hoặc `backend/` đều đúng**.
+Vì Render chạy lệnh từ thư mục đó, không thêm `cd backend` và không thêm tiền tố `backend/`
+vào đường dẫn requirements.
+
+- **Build Command:** `pip install -r requirements.txt`.
+- **Start Command:**
+
+  ```bash
+  python manage.py migrate --noinput && daphne -b 0.0.0.0 -p $PORT crown.asgi:application
+  ```
+
+Chờ backend báo Live và kiểm tra URL `/api/health/` trước khi kết nối frontend.
+
+### 2. Import frontend vào Netlify
+
+Đăng nhập [Netlify](https://app.netlify.com/), chọn tạo project/site mới bằng cách import
+repository từ GitHub, rồi chọn `binanddev/hadilaoplus`.
+
+Điền các thiết lập build:
+
+- **Branch to deploy:** `minhtien`.
+- **Base directory:** `frontend`.
+- **Package directory:** để trống nếu giao diện có trường này; Base directory đã trỏ tới frontend.
+- **Build command:** `npm run build`.
+- **Publish directory:** `dist`, tính từ Base directory; không nhập thêm `frontend/dist`.
+- **Functions directory:** để trống; backend không chạy trong Netlify Functions.
+
+Netlify cài dependencies trước bước build. Kho đã có `package-lock.json`.
+Trong phần **Environment variables**, thêm:
+
+```dotenv
+NODE_VERSION=24
+VITE_API_URL=https://hadilaoplus-api.onrender.com
+```
+
+Thay URL ví dụ bằng URL backend Render thực tế. Dùng `https://`, không thêm `/api`
+hoặc dấu `/` cuối. Biến `VITE_API_URL` là địa chỉ công khai; không đưa khóa bí mật
+của Django vào bất kỳ biến `VITE_*` nào.
+
+Deploy frontend. Khi hoàn tất, Netlify cấp địa chỉ dạng `https://ten-site.netlify.app`.
+
+### 3. Cho phép frontend Netlify kết nối backend
+
+Trở lại **Render → backend → Environment**, sửa cấu hình, ví dụ:
+
+```dotenv
+DEBUG=0
+ALLOWED_HOSTS=hadilaoplus-api.onrender.com
+FRONTEND_ORIGINS=https://ten-site.netlify.app
+```
+
+Giữ nguyên `DJANGO_SECRET_KEY` đã tạo. `ALLOWED_HOSTS` vẫn là hostname backend Render,
+không đổi sang tên miền Netlify. `FRONTEND_ORIGINS` mới là URL frontend Netlify thực tế,
+không có dấu `/` cuối. Lưu và deploy lại backend.
+
+Nếu muốn cho phép cả frontend Render cũ và Netlify, liệt kê hai origin cách nhau bằng dấu phẩy,
+không có khoảng trắng. Khi dùng tên miền riêng, thêm đúng origin tên miền đó vào danh sách.
+
+Frontend gửi API và kết nối `wss://` **thẳng tới backend Render**. Không cần cấu hình proxy
+`/api` hay `/ws` qua Netlify; proxy trong `vite.config.ts` chỉ dùng khi chạy local.
+
+### 4. Tải lại trang và cập nhật phiên bản
+
+Kho đã có `frontend/public/_redirects` với nội dung:
+
+```text
+/* /index.html 200
+```
+
+Vite tự chép file này vào `dist`; Netlify dùng nó để mở lại các đường dẫn của ứng dụng
+thay vì trả 404. Các file tài nguyên có thật vẫn được phục vụ bình thường.
+
+Mở frontend Netlify và thử tạo/vào phòng với hai trình duyệt. Nếu không kết nối được,
+kiểm tra URL backend đã Live, `VITE_API_URL` và `FRONTEND_ORIGINS` có khớp địa chỉ thực tế.
+Render Free vẫn có thể ngủ và mất phòng khi khởi động lại, dù frontend đặt ở Netlify.
+
+Khi sửa biến `VITE_API_URL` trên Netlify, cần chạy một deploy mới vì biến được nhúng
+vào bản build. Sau này push lên nhánh `minhtien` sẽ kích hoạt deploy nếu bật tự động triển khai.
+
+Tài liệu chính thức: [Vite trên Netlify](https://docs.netlify.com/build/frameworks/framework-setup-guides/vite/),
+[rewrite cho ứng dụng SPA](https://docs.netlify.com/manage/routing/redirects/rewrites-proxies/).
+
 ## Kiểm tra không chạy server
 
 Sau khi chuẩn bị môi trường:
