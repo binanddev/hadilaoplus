@@ -5,18 +5,21 @@
 Máy chủ quyết định vàng, bài, lượt, kết quả xúc xắc và vương miện. Hiệu ứng trên trình duyệt
 chỉ minh họa kết quả. Bài của đối thủ không được gửi trong dữ liệu công khai.
 Mỗi yêu cầu có mã hành động để tránh xử lý lặp; trạng thái có phiên bản tăng dần.
-Trạng thái ván lưu trong database. Redis/Valkey truyền thông báo, không phải nguồn dữ liệu chính.
+Trạng thái ván lưu trong SQLite. Khi dùng Redis/Valkey, nó chỉ truyền thông báo,
+không phải nguồn dữ liệu chính.
 
-SQLite và channel layer trong bộ nhớ phục vụ chạy local một tiến trình.
-Neon và Redis được cấu hình bằng biến môi trường cho Render.
+SQLite và channel layer trong bộ nhớ phục vụ chạy một tiến trình, cả local lẫn Render.
+Neon và Redis là lựa chọn mở rộng qua biến môi trường, không bắt buộc cho nhóm bạn.
 Đây là bản game nhóm bạn; chưa có tài khoản, bảng xếp hạng, chat, thoại, bot hoặc phục hồi
 đáng tin cậy qua mọi sự cố. Không có đồng bộ mô phỏng vật lý giữa các máy.
 
 ## Trình tự lượt và đổi vua
 
-Mỗi vòng chốt danh sách lượt theo ghế, bắt đầu ở vua đầu vòng.
-Một người chỉ có một lượt chính trong vòng. Vua lúc bắt đầu lượt có 3 hành động,
-người khác 2. Mỗi lá tính một hành động; có thể kết thúc sớm.
+Mỗi vòng chốt các vị trí ghế, bắt đầu ở Vua, luân phiên hướng thuận/ngược theo vòng.
+Mỗi ghế có một lượt chính. Vua có 3 hành động (bàn 4 người là 2), Quý tộc có 2.
+Tay bài nền 8 lá; rút bù cuối lượt, chia riêng bộ Vua/Quý tộc theo 99 lá in.
+Đổi Vua đổi ghế và toàn bộ tay bài; kết thúc lượt ghế sau khi giải quyết hết phản hồi,
+không tạo lượt miễn phí. Các nhánh lựa chọn, phản ứng và hiệu ứng có thời hạn xử lý trên máy chủ.
 Đổi vua ngay sau khi áp dụng trọn vẹn một hiệu ứng nhiều mục tiêu.
 Kết quả không phụ thuộc vào thứ tự cập nhật từng nạn nhân.
 
@@ -24,12 +27,13 @@ Kết quả không phụ thuộc vào thứ tự cập nhật từng nạn nhân
 
 Chuyển vàng là hành động tức thời. Đổi bài là một đề nghị cần chấp nhận;
 máy chủ kiểm tra lại quyền sở hữu và số dư khi chấp nhận.
-Không tiết lộ toàn bộ tay bài của đối thủ. Đề nghị đổi lấy bài ngẫu nhiên là lựa chọn
-đơn giản cho bản đầu. Giao kèo về hành động vòng sau không được máy chủ cưỡng chế.
+Không tiết lộ toàn bộ tay bài đối thủ trừ hiệu ứng cho phép xem riêng. Đổi bài một lấy một,
+người nhận chọn lá trả; giới hạn tổng vàng nhận 400 mỗi phiên. Bỏ bài theo giao kèo cần xác nhận.
+Giao kèo về hành động vòng sau không được máy chủ cưỡng chế.
 
 ## Thử thách xã hội
 
-Loyal Dog và Royal Parrot dùng tự xác nhận hoặc chịu phạt.
+Loyal Dog, Royal Parrot và các thử thách xã hội dùng tự xác nhận; chỉ phạt nếu thẻ quy định.
 Không có microphone, nhận diện giọng nói hoặc xác minh người chơi thực sự đọc câu thoại.
 Nhóm tự gọi nhau qua ứng dụng riêng.
 

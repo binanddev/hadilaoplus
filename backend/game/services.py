@@ -28,6 +28,8 @@ def locked_room(code):
             room = Room.objects.select_for_update().get(code=code.upper())
         except Room.DoesNotExist:
             raise engine.RuleError('Không tìm thấy phòng.')
+        if engine.upgrade(room.state):
+            room.save()
         yield room
 
 def join_room(code, name, character='regent'):

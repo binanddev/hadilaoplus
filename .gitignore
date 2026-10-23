@@ -13,3 +13,4 @@ backend/.env
 backend/.env.render
 frontend/.env.local
 *.log
+tmp/

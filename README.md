@@ -38,14 +38,23 @@ Mỗi hồ sơ lưu phiên ghế riêng. Tạo phòng ở cửa sổ thứ nhấ
 
 - Mỗi phòng tối đa 8 người, từ 2 người để thử; nên chơi 4–8 người.
 - Mặc định 4 vòng, thương lượng sau các vòng trừ vòng cuối.
-- Rút bù lên 5 lá đầu vòng. Vua tối đa 3 lá/lượt, quý tộc 2 lá/lượt.
-- Hạn mức chốt khi bắt đầu lượt; đổi vua giữa lượt không cấp thêm lượt.
-- Người vượt vàng vua sẽ nhận vương miện ngay sau hành động; hòa giữ vua hiện tại.
-- Vàng không âm, không ai bị loại chỉ vì hết vàng.
-- Chuyển vàng và đổi bài trong thương lượng; hai bên có thể phản bội lời hứa tương lai.
+- Vua đầu tiên chọn ngẫu nhiên; chuẩn: Vua 1.000 vàng, Quý tộc 600 vàng.
+- Tay bài nền 8 lá, hai bộ Vua/Quý tộc riêng với 99 lá theo bộ in (44 loại theo vai).
+- Bù bài đã đánh cuối lượt. Vua tối đa 3 lá, riêng bàn 4 người là 2; Quý tộc 2 lá.
+- Hướng lượt đổi thuận/ngược qua các vòng; đổi vua phải đổi cả ghế và toàn bộ tay bài.
+- Người vượt vàng vua nhận vương miện sau hiệu ứng; hòa giữ vua hiện tại.
+- Vàng giới hạn 0–2.000; mỗi người nhận tối đa 400 vàng trong một phiên thương lượng.
+- Knight úp có thể là bài giả, chỉ Knight thật chống Betrayal. Có bỏ phiếu, phản ứng và hiệu ứng kéo dài.
+- Đổi bài một lấy một trong thương lượng; lời hứa tương lai không ràng buộc.
 - Kết thúc vòng cuối, người đang đội vương miện thắng. Có thể chơi lại cùng phòng.
 
-Đọc [ghi chú thiết kế](docs/DESIGN.md) để biết giới hạn của bản đầu.
+Mặc định giữ bom giảm 500 vàng và bỏ thương lượng vòng cuối theo thiết kế web đã thống nhất;
+có thể chọn bom 800 vàng và bật thương lượng vòng cuối để gần cấu trúc bản in.
+Các tùy chọn 5 lá, vàng ngẫu nhiên/bằng nhau và số vòng khác 4 là biến thể.
+
+Đọc [luật và đối chiếu bản in](docs/RULES.md), [ghi công nguồn](docs/ATTRIBUTION.md)
+và [ghi chú thiết kế](docs/DESIGN.md). Bản chuyển thể nội dung One King One Crown là phi thương mại,
+chia sẻ theo CC BY-NC-SA 4.0; không đưa PDF/hình thẻ gốc vào kho mã.
 
 ## Deploy lên Render: frontend + backend, không cần Neon/Redis
 

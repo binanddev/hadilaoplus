@@ -1,3 +1,4 @@
+import { presentationKind } from './cardPresentation.ts';
 export type SoundCue='card'|'shuffle'|'coins'|'royal'|'dice'|'bomb'|'shield';
 type SoundState={code:string;phase:string;king_id?:string;last_event?:{id:string;type:string}};
 /** Tracks live transitions only. A first snapshot or reconnect establishes a silent baseline. */
@@ -10,14 +11,15 @@ export class SoundTracker {
   if(this.baseline&&this.room===state.code){
    if(['lobby','finished'].includes(this.phase)&&state.phase==='playing')cues.push('shuffle');
    if(event?.id&&!this.seen.has(key)){
-    const kind=event.type;
+    const kind=presentationKind(event.type);
     if(kind==='transfer')cues.push('coins');
-    else if(['theft','tax','gift','loyal_dog','parrot','mad_king','bomb','shield'].includes(kind)){
+    else if(/^(?:n|k|noble|king)_/.test(event.type)||['theft','tax','gift','loyal_dog','parrot','mad_king','bomb','shield'].includes(kind)){
      cues.push('card');
      if(['theft','tax','gift','loyal_dog'].includes(kind))cues.push('coins');
      else if(kind==='mad_king')cues.push('dice');
      else if(kind==='bomb')cues.push('bomb');
      else if(kind==='shield')cues.push('shield');
+     else if(kind==='inspect')cues.push('shuffle');
     }
    }
    if(state.king_id&&state.king_id!==this.king)cues.push('royal');
