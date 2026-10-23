@@ -47,20 +47,133 @@ Mỗi hồ sơ lưu phiên ghế riêng. Tạo phòng ở cửa sổ thứ nhấ
 
 Đọc [ghi chú thiết kế](docs/DESIGN.md) để biết giới hạn của bản đầu.
 
-## Triển khai Render + Neon
+## Deploy lên Render: frontend + backend, không cần Neon/Redis
 
-1. Đưa dự án vào kho mã riêng. Dùng Blueprint `render.yaml` để tạo frontend Static Site,
-   backend Python Web Service và Render Key Value.
-2. Nhập `DATABASE_URL` của Neon với TLS theo chuỗi kết nối Neon cung cấp.
-3. `ALLOWED_HOSTS`: hostname backend, không có `https://`.
-4. `FRONTEND_ORIGINS`: URL frontend đầy đủ, ví dụ `https://your-game.onrender.com`.
-5. `VITE_API_URL`: URL backend đầy đủ, ví dụ `https://your-api.onrender.com`.
-6. `REDIS_URL` lấy từ Key Value; `DJANGO_SECRET_KEY` được Render tạo.
-7. Backend cần `DEBUG=0`. Không dùng SQLite hoặc channel layer trong bộ nhớ khi triển khai.
+Với nhóm bạn chơi vui, chỉ cần **một Static Site cho frontend** và **một Web Service
+chạy một tiến trình Daphne cho backend**. Code vẫn dùng SQLite để giữ phòng, bài, vàng
+và lượt đang chơi, nhưng không cần tạo dịch vụ database riêng.
 
-Không đưa file `.env`, chuỗi kết nối hoặc khóa bí mật lên kho mã.
-Thay đổi biến `VITE_*` cần build lại frontend. Bản miễn phí có thể ngủ hoặc khởi động lại;
-chấp nhận tạo ván mới nếu gặp sự cố. Nâng gói backend khi cần phòng luôn sẵn sàng.
+SQLite nằm trên ổ đĩa tạm của backend Render. Khi dịch vụ ngủ, khởi động lại hoặc deploy
+mới, dữ liệu phòng có thể mất; hãy tạo phòng mới. Phương án này không bảo đảm khôi phục ván.
+Giữ backend ở **một instance, một tiến trình Daphne** để channel layer trong bộ nhớ hoạt động đúng.
+
+**Tạo hai dịch vụ thủ công theo các bước dưới đây. Không chọn Blueprint cho phương án này:**
+`render.yaml` hiện là mẫu cấu hình nâng cao, có yêu cầu database ngoài và Render Key Value.
+
+### 1. Tạo backend
+
+Vào [Render Dashboard](https://dashboard.render.com/) → **New → Web Service**,
+kết nối GitHub và chọn kho `binanddev/hadilaoplus`.
+
+- **Name:** `hadilaoplus-api` (hoặc tên còn trống).
+- **Branch:** `minhtien`.
+- **Region:** Singapore.
+- **Root Directory:** `backend`.
+- **Language/Runtime:** Python 3.
+- **Instance Type:** Free để thử nghiệm.
+- **Build Command:**
+
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+- **Start Command:**
+
+  ```bash
+  python manage.py migrate --noinput && daphne -b 0.0.0.0 -p $PORT crown.asgi:application
+  ```
+
+- **Health Check Path:** `/api/health/`.
+
+Lệnh `migrate` tạo bảng SQLite khi bắt đầu chạy. Không dùng `run.bat`, `runserver`
+hoặc máy chủ WSGI để chạy backend trên Render; game cần ASGI/WebSocket.
+
+Trong **Environment**, thêm các biến sau (thay giá trị ví dụ bằng địa chỉ thực tế):
+
+```dotenv
+DEBUG=0
+DJANGO_SECRET_KEY=<chuỗi-ngẫu-nhiên-dài-do-bạn-tạo>
+ALLOWED_HOSTS=hadilaoplus-api.onrender.com
+FRONTEND_ORIGINS=https://hadilaoplus.onrender.com
+```
+
+- `ALLOWED_HOSTS` chỉ chứa hostname backend, **không có** `https://` hoặc đường dẫn.
+- `FRONTEND_ORIGINS` chứa URL frontend đầy đủ, **không có dấu `/` cuối**.
+  Có thể tạm điền tên miền dự kiến rồi cập nhật sau bước 2.
+- **Không tạo** `DATABASE_URL` và `REDIS_URL`; nếu đã thêm, xóa để dùng SQLite và channel layer trong bộ nhớ.
+- Chưa cần khai báo phiên bản Python nếu phiên bản mặc định của Render tương thích với requirements.
+
+Tạo khóa bí mật trên máy bằng lệnh sau, rồi chép kết quả vào `DJANGO_SECRET_KEY`:
+
+```powershell
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Không chép nguyên dấu `<...>` làm giá trị khóa và không đưa khóa thật vào Git.
+Bấm **Create Web Service**. Khi deploy thành công, mở
+`https://<hostname-backend-thực-tế>/api/health/`; kết quả cần là `{"status":"ok"}`.
+
+### 2. Tạo frontend
+
+Trên Render → **New → Static Site**, chọn cùng kho GitHub:
+
+- **Name:** `hadilaoplus` (hoặc tên còn trống).
+- **Branch:** `minhtien`.
+- **Root Directory:** `frontend`.
+- **Build Command:** `npm ci && npm run build`.
+- **Publish Directory:** `dist`.
+
+Trong **Environment**, thêm `VITE_API_URL` bằng URL backend thực tế, ví dụ:
+
+```dotenv
+VITE_API_URL=https://hadilaoplus-api.onrender.com
+```
+
+Không thêm `/api`, không thêm dấu `/` cuối, không điền địa chỉ `localhost`.
+Frontend tự nối đường dẫn API và chuyển sang `wss://` để kết nối WebSocket.
+Bấm **Create Static Site**.
+
+Trong **Redirects/Rewrites**, thêm quy tắc để đường dẫn frontend mở được khi tải lại:
+
+- **Source:** `/*`.
+- **Destination:** `/index.html`.
+- **Action:** Rewrite.
+
+### 3. Cập nhật địa chỉ hai dịch vụ
+
+Sau khi có URL frontend thực tế, quay lại **backend → Environment**:
+
+1. Đặt `FRONTEND_ORIGINS` đúng URL frontend Render cấp.
+2. Kiểm tra `ALLOWED_HOSTS` khớp hostname backend Render cấp.
+3. Lưu cấu hình và deploy lại backend.
+
+Nếu sửa `VITE_API_URL`, phải deploy lại frontend vì biến `VITE_*` được đưa vào lúc build.
+Địa chỉ `hadilaoplus.onrender.com` và `hadilaoplus-api.onrender.com` ở trên chỉ là ví dụ;
+Render có thể cấp tên khác nếu tên đó đã được sử dụng.
+
+### 4. Chơi thử và xử lý lỗi thường gặp
+
+Mở frontend, tạo phòng; dùng trình duyệt/hồ sơ khác hoặc gửi mã cho bạn bè để vào cùng.
+Chọn nhân vật, sẵn sàng, bắt đầu và kiểm tra bài/vàng cập nhật trên các máy.
+Âm thanh cần một thao tác chuột/phím để trình duyệt cho phép phát.
+
+- **Backend trả lỗi hostname:** kiểm tra `ALLOWED_HOSTS`.
+- **API/WebSocket không kết nối:** kiểm tra `VITE_API_URL`, `FRONTEND_ORIGINS`
+  và backend đã báo Live; URL frontend phải khớp cả `https://` lẫn hostname.
+- **Backend vừa thức dậy:** chờ dịch vụ sẵn sàng, rồi tải lại frontend.
+- **Phòng cũ không còn sau restart/deploy:** về trang chủ và tạo phòng mới.
+
+Render Free có thể ngủ sau khoảng 15 phút không có lưu lượng vào và mất khoảng một phút
+để thức lại. Nâng gói backend nếu cần luôn sẵn sàng; nâng gói không tự làm SQLite bền vững.
+
+Tài liệu chính thức: [Static Sites](https://render.com/docs/static-sites),
+[WebSocket](https://render.com/docs/websocket), [giới hạn Free](https://render.com/docs/free).
+
+### Khi nào mới cần Neon và Redis?
+
+Chỉ bổ sung khi muốn giữ ván qua restart hoặc chạy backend nhiều instance/tiến trình.
+Code đã có sẵn hỗ trợ `DATABASE_URL` cho PostgreSQL và `REDIS_URL` cho Channels;
+có thể dùng mẫu `render.yaml` lúc đó. Không đưa file `.env` hoặc khóa bí mật lên Git.
 
 ## Kiểm tra không chạy server
 
