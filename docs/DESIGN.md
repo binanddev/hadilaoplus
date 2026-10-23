@@ -57,6 +57,21 @@ Nhân vật có cử động theo lượt, ra bài và phản ứng; ghế vua c
 Âm thanh tổng hợp bằng Web Audio: chỉ hiệu ứng ngắn khi có sự kiện mới, không nhạc nền
 hoặc tiếng lửa lặp. Có nút tắt/bật và tuân theo việc mở khóa âm thanh bằng thao tác người dùng.
 
+## Bản đồ mở rộng
+
+`maps.ts` mô tả bốn lựa chọn; `worlds.ts` dựng ba cảnh ngoài trời mới.
+`settings.map_id` lưu cùng phòng, chỉ chủ phòng đổi trước ván; không tác động bộ luật.
+Hai bản đồ ban ngày là Đảo Hải Âu và Vườn Lâu Đài; Tu Viện Trăng là bản đồ đêm.
+Kiến trúc có ghép lô tĩnh; trang phục khớp nối dùng ghép lô động để giảm số lượt vẽ.
+Động vật, cờ, nước và hạt chạy tại máy người chơi. Chế độ nhẹ giữ chúng ở tư thế tĩnh.
+Vật liệu và texture được giải phóng trước thiết bị đồ họa khi đổi bản đồ.
+`characterDetail.ts` bổ sung hình học lên khung nhân vật đang có; không tải mô hình,
+âm thanh hoặc ảnh từ bên ngoài. Vẫn giữ tối đa tám ghế và thông tin bài kín.
+
+Kiểm tra ngoại tuyến cảnh thật qua NullGraphicsDevice: dựng ba bản đồ, ghép lô,
+chạy hoạt ảnh ở nhiều mốc thời gian, kiểm tra tọa độ hữu hạn và chế độ nhẹ.
+Đây không phải phép đo FPS hay kiểm tra ảnh chụp trên GPU trình duyệt.
+
 ## Kết nối khi phát triển
 
 Đóng tab hoặc thoát game tạo WSDISCONNECT là bình thường. Lỗi proxy ECONNABORTED chỉ cho biết

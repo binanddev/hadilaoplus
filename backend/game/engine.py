@@ -6,7 +6,7 @@ import time
 import uuid
 
 CHARACTERS = ('regent', 'rogue', 'scholar', 'knight', 'merchant', 'jester')
-DEFAULTS = dict(rounds=4, negotiation_seconds=120, turn_seconds=0, starting_gold='roles', hand_size=8, allow_transfers=True, allow_trades=True, challenge_cards=True, bomb_mode='fixed', final_negotiation=False)
+DEFAULTS = dict(rounds=4, negotiation_seconds=120, turn_seconds=0, starting_gold='roles', hand_size=8, allow_transfers=True, allow_trades=True, challenge_cards=True, bomb_mode='fixed', final_negotiation=False, map_id='tavern')
 
 class RuleError(ValueError):
     pass
@@ -22,6 +22,7 @@ def settings_from(raw):
         require(type(result[key]) is int and result[key] in values, f'Thiết lập {key} không hợp lệ.')
     require(result['starting_gold'] in ('roles', 'random', 'equal'), 'Kiểu vàng không hợp lệ.')
     require(result['bomb_mode'] in ('fixed', 'half', 'original'), 'Kiểu bom không hợp lệ.')
+    require(isinstance(result['map_id'], str) and result['map_id'] in ('tavern', 'island', 'garden', 'abbey'), 'Bản đồ không hợp lệ.')
     for key in ('allow_transfers', 'allow_trades', 'challenge_cards', 'final_negotiation'):
         require(type(result[key]) is bool, 'Thiết lập phải là đúng hoặc sai.')
     return result

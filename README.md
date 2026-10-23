@@ -19,6 +19,23 @@ Giữ chuột phải trên cảnh 3D để nhìn quanh. Có thể thả bài và
 Âm thanh chỉ gồm hiệu ứng ngắn cho bài, tiền, xúc xắc, vương miện và bom; không có nhạc nền.
 Trình duyệt yêu cầu thao tác chuột/phím trước khi cho phép phát tiếng. Dùng nút âm thanh để tắt/bật.
 
+### Bản đồ và đồ họa
+
+Giữ Tửu quán Tro Hồng và thêm ba không gian trung cổ phương Tây:
+
+- **Đảo Hải Âu — ban ngày:** bàn hội đồng trên đảo, biển, bến gỗ, thuyền buồm và hải âu.
+- **Vườn Lâu Đài — ban ngày:** vườn hồng, tường thành, đài phun nước, thỏ và bướm.
+- **Tu Viện Trăng — ban đêm:** sân phế tích ngoài trời, vòm đá, đuốc, cú, sương và đom đóm.
+
+Chọn bản đồ trên trang tạo phòng để xem trước. Chủ phòng có thể đổi trong phòng chờ;
+bản đồ được đồng bộ cho cả phòng và khóa khi ván bắt đầu. Đổi thiết lập yêu cầu mọi người
+sẵn sàng lại. Phòng cũ dùng tửu quán nếu chưa có lựa chọn bản đồ.
+
+Sáu nhân vật có thêm chi tiết mặt, ngón tay, phụ kiện và trang phục theo vai ngoại hình.
+Đồ họa vẫn là mô hình cách điệu dựng bằng hình học, không phải nhân vật tả thực.
+Nút **Hiệu ứng: nhẹ** dừng chuyển động môi trường, chớp mắt và các hạt trang trí.
+Các cảnh không thêm nhạc hay âm thanh nền và không thay đổi luật.
+
 Chỉ chuẩn bị môi trường, không mở server: `py run.py --setup-only`.
 
 Để thử nhiều người trên một máy: mở các hồ sơ trình duyệt khác nhau hoặc cửa sổ thường và riêng tư.

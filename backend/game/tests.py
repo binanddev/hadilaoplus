@@ -204,6 +204,20 @@ class RulesTests(TestCase):
         self.assertFalse(self.s['players'][0]['hand'])
 
 class ApiTests(TestCase):
+    def test_map_selection_is_shared_host_only_and_locked_after_start(self):
+        auth = services.create_room('Host', {'map_id': 'island'})
+        guest = services.join_room(auth['code'], 'Guest')
+        self.assertEqual(services.read(auth['code'], guest['token'])['settings']['map_id'], 'island')
+        change = {'action': 'configure', 'action_id': 'map', 'settings': {'map_id': 'garden'}}
+        self.assertIsNotNone(services.mutate(auth['code'], guest['token'], change))
+        self.assertIsNone(services.mutate(auth['code'], auth['token'], change))
+        self.assertEqual(services.read(auth['code'], guest['token'])['settings']['map_id'], 'garden')
+        self.assertIsNotNone(services.mutate(auth['code'], auth['token'], change | {'action_id': 'bad', 'settings': {'map_id': 'unknown'}}))
+        services.mutate(auth['code'], guest['token'], {'action': 'ready', 'action_id': 'ready-map'})
+        services.mutate(auth['code'], auth['token'], {'action': 'start', 'action_id': 'start-map'})
+        self.assertIsNotNone(services.mutate(auth['code'], auth['token'], change | {'action_id': 'late', 'settings': {'map_id': 'abbey'}}))
+        self.assertEqual(services.read(auth['code'], guest['token'])['settings']['map_id'], 'garden')
+
     def test_max_eight_players_enforced(self):
         auth=services.create_room('Host',{})
         for seat in range(1,8):
