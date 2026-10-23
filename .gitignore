@@ -10,5 +10,6 @@ frontend/.npm-cache/
 frontend/dist/
 .env
 backend/.env
+backend/.env.render
 frontend/.env.local
 *.log

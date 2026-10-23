@@ -203,6 +203,10 @@ repository từ GitHub, rồi chọn `binanddev/hadilaoplus`.
 
 Điền các thiết lập build:
 
+Kho đã có `netlify.toml` ở thư mục gốc để đặt sẵn Base directory, Build command,
+Publish directory và Node 24. Các giá trị trong file được ưu tiên hơn cấu hình tương ứng
+trên giao diện Netlify. Hãy deploy commit mới nhất trên nhánh `minhtien`.
+
 - **Branch to deploy:** `minhtien`.
 - **Base directory:** `frontend`.
 - **Package directory:** để trống nếu giao diện có trường này; Base directory đã trỏ tới frontend.
@@ -264,6 +268,47 @@ vào bản build. Sau này push lên nhánh `minhtien` sẽ kích hoạt deploy 
 
 Tài liệu chính thức: [Vite trên Netlify](https://docs.netlify.com/build/frameworks/framework-setup-guides/vite/),
 [rewrite cho ứng dụng SPA](https://docs.netlify.com/manage/routing/redirects/rewrites-proxies/).
+
+### Nếu deploy bị lỗi ngay từ đầu
+
+**Netlify: `No build steps found` rồi `Deploy directory 'frontend/dist' does not exist`.**
+Netlify chưa chạy `npm run build`, nên chưa tạo thư mục xuất bản. Deploy commit mới có
+`netlify.toml`; kiểm tra log phải hiển thị chạy `npm run build`. Nếu cấu hình thủ công,
+đặt Base directory `frontend`, Build command `npm run build`, Publish directory `dist`.
+Đường dẫn `frontend/dist` trong log có thể là đường dẫn đã được Netlify quy đổi từ Base directory;
+dòng `No build steps found` mới là dấu hiệu trực tiếp cho thấy thiếu bước build.
+Không cần đưa `dist` vào Git. Dòng báo không tìm được cache và thông báo cập nhật pip không phải
+nguyên nhân của các lỗi này.
+
+**Render: `RuntimeError: Set DJANGO_SECRET_KEY for production`.**
+Backend chưa nhận được khóa riêng hợp lệ, đang dùng khóa mặc định dành cho local.
+Vào đúng Web Service backend → **Environment → Add Environment Variable**:
+
+- **Key:** `DJANGO_SECRET_KEY` (đúng tên này, không phải `SECRET_KEY`).
+- **Value:** kết quả của `python -c "import secrets; print(secrets.token_urlsafe(48))"` trên máy bạn.
+
+Không dùng khóa mặc định bắt đầu bằng `local-`, không đưa khóa vào Git và không cần gửi khóa cho ai.
+Giữ `DEBUG=0`, chọn **Save and deploy** hoặc lưu rồi deploy lại. Nếu chỉ chọn **Save only**,
+backend chưa nhận giá trị mới cho đến lần deploy kế tiếp. File `.env.example` chỉ là mẫu,
+không tự trở thành biến môi trường của dịch vụ Render.
+
+### Nhập biến backend từ một file
+
+Trên máy chuẩn bị dự án có thể dùng file riêng `backend/.env.render` để nhập nhanh.
+File thật chứa khóa ngẫu nhiên, được `.gitignore` loại khỏi Git; không xuất hiện trên GitHub.
+`backend/.env.render.example` là mẫu công khai, chưa có khóa dùng thật.
+
+1. Mở file `.env.render` trên máy bằng trình soạn thảo.
+2. Thay `YOUR-BACKEND.onrender.com` bằng hostname backend Render của bạn.
+3. Thay `https://YOUR-SITE.netlify.app` bằng URL frontend Netlify thực tế, không có `/` cuối.
+4. Vào **Render → Web Service backend → Environment → Add from .env** và nhập nội dung file.
+   Nếu giao diện cho chọn file, chọn `.env.render`; nếu hiện ô văn bản, dán nội dung vào ô đó.
+5. Kiểm tra không còn biến trùng tên với giá trị cũ, rồi chọn **Save and deploy**.
+
+Chỉ nhập file này vào backend Render, không nhập vào Netlify. Netlify chỉ cần `VITE_API_URL`
+trỏ tới backend. Không đẩy file thật lên Git hoặc đưa khóa vào biến `VITE_*`.
+Không cần thay `DJANGO_SECRET_KEY` mỗi lần deploy; giữ nguyên khóa đã dùng cho dịch vụ.
+File `.env.render` chỉ phục vụ nhập cấu hình, không tự được Django đọc khi chạy local.
 
 ## Kiểm tra không chạy server
 
