@@ -1,0 +1,36 @@
+.sh-chamber{position:absolute;inset:0;overflow:hidden;isolation:isolate;background:#d9ddd0}
+.sh-chamber>canvas{display:block;width:100%;height:100%;outline:none;touch-action:none}
+.sh-chamber .sh-seat-labels{position:absolute;inset:0;pointer-events:none}
+.sh-chamber .sh-seat-label{display:none;position:absolute;transform:translate(-50%,-100%);flex-direction:column;gap:3px;min-width:96px;max-width:170px;padding:7px 12px;background:#f4ecd9f2;border:1px solid #9c8a61;border-radius:2px;color:#292e28;box-shadow:0 3px 12px #372f2229;font:600 12px Georgia,serif;line-height:1.2;pointer-events:none;white-space:nowrap}
+.sh-chamber .sh-seat-label:disabled{opacity:.96;cursor:default}
+.sh-chamber .sh-seat-label span{overflow:hidden;text-overflow:ellipsis}
+.sh-chamber .sh-seat-label small{font:9px system-ui,sans-serif;letter-spacing:1.1px;color:#68674e}
+.sh-chamber .sh-seat-label.is-selected{border:2px solid #ad4c32;background:#fff0d3;box-shadow:0 0 0 3px #d49a6455}
+.sh-chamber .sh-seat-label.is-selectable:not(:disabled){pointer-events:auto;cursor:pointer;background:#fff4d9;border-color:#bc914d;transition:background .2s,box-shadow .2s}
+.sh-chamber .sh-seat-label.is-selectable:not(:disabled):hover,.sh-chamber .sh-seat-label:focus-visible{background:#fff8df;box-shadow:0 0 0 3px #c6a26270;outline:none}
+.sh-chamber .sh-seat-label.is-dead{background:#bfbbaa;color:#4c4a41;border-color:#8c8774}
+.sh-chamber .sh-seat-label.is-dead small{color:#6b6152}
+.sh-chamber .sh-camera-hint{position:absolute;bottom:108px;left:50%;transform:translateX(-50%);font:9px system-ui,sans-serif;letter-spacing:1.3px;color:#293f37;background:#f7efd6dd;border:1px solid #96845a66;padding:7px 12px;pointer-events:none;white-space:nowrap}
+.sh-chamber .sh-chamber-fallback{position:absolute;left:25%;right:25%;top:30%;padding:30px;color:#2e3d31;background:#e8e0c9f5;border:1px solid #8e7b4f;text-align:center;font:16px Georgia,serif}
+.sh-chamber .sh-chamber-fallback strong{font-size:30px}
+.sh-chamber .sh-chamber-fallback span{display:inline-block;margin:5px;padding:10px;border:1px solid #887750}
+.sh-chamber .sh-seating-caption{position:absolute;top:110px;left:50%;transform:translateX(-50%);background:#f8efd8f2;border:1px solid #b49b69;padding:11px 18px;color:#34483c;box-shadow:0 4px 15px #0002;font:12px system-ui,sans-serif;white-space:nowrap;pointer-events:none}
+.sh-chamber .sh-gun-overlay{position:absolute;inset:0;pointer-events:none}
+.sh-chamber .sh-crosshair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8d3025;text-shadow:0 0 3px #fff;font:38px Georgia,serif;line-height:1}
+.sh-chamber .sh-fire-controls{position:absolute;left:50%;bottom:150px;transform:translateX(-50%);display:flex;flex-direction:column;gap:9px;align-items:center;max-width:calc(100vw - 40px)}
+.sh-chamber .sh-fire-controls>span{color:#2e4238;background:#f4eedddf;border:1px solid #b6a57c;padding:6px 10px;font:10px system-ui,sans-serif;text-align:center}
+.sh-chamber .sh-fire-controls button{pointer-events:auto;background:#8e3d2b;color:#fff6df;border:1px solid #d0a16b;box-shadow:0 4px 0 #542f24;padding:13px 25px;font:600 13px system-ui,sans-serif;min-width:160px}
+.sh-chamber .sh-fire-controls button:hover:not(:disabled){background:#aa4b32}
+.sh-chamber .sh-fire-controls button:disabled{opacity:.5;cursor:default}
+.sh-chamber.is-armed>canvas{cursor:crosshair}
+@media(max-width:700px){.sh-chamber .sh-seat-label{min-width:60px;max-width:110px;padding:5px 7px;font-size:10px}.sh-chamber .sh-seat-label small{font-size:7px;letter-spacing:.6px}.sh-chamber .sh-camera-hint{bottom:117px;font-size:7px;letter-spacing:.6px;max-width:90vw;white-space:normal;text-align:center}.sh-chamber .sh-chamber-fallback{left:8%;right:8%}.sh-chamber .sh-seating-caption{top:100px;max-width:90vw;white-space:normal;text-align:center;font-size:10px}.sh-chamber .sh-fire-controls{bottom:165px;max-width:90vw;width:280px}.sh-chamber .sh-fire-controls>span{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.sh-chamber .sh-seat-label{transition:none}}
+.sh-chamber .sh-seat-label{max-width:235px;white-space:normal}.sh-chamber .sh-seat-label .sh-actor-action{display:block;max-width:220px;padding-top:5px;margin-top:3px;border-top:1px solid #bba77966;font:600 10px system-ui,sans-serif;line-height:1.45;letter-spacing:0;color:#355c50;white-space:normal;text-align:center}.sh-chamber .sh-seat-label.is-selected .sh-actor-action{color:#943f2e}@media(max-width:700px){.sh-chamber .sh-seat-label{max-width:165px}.sh-chamber .sh-seat-label .sh-actor-action{max-width:150px;font-size:8px;line-height:1.4}}
+
+.sh-chamber .sh-seat-label .sh-actor-action:empty{display:none}
+
+.sh-chamber .sh-staff-labels{position:absolute;inset:0;pointer-events:none}.sh-chamber .sh-staff-label{display:none;position:absolute;transform:translate(-50%,-100%);max-width:180px;background:#e9f0e8e8;border:1px solid #6c8b7d99;color:#33574c;padding:5px 9px;border-radius:3px;font:600 9px system-ui,sans-serif;line-height:1.45;text-align:center;box-shadow:0 2px 9px #23362d20}@media(max-width:700px){.sh-chamber .sh-staff-label{font-size:7px;max-width:135px;padding:4px 6px}}
+.sh-chamber .sh-finale-caption{position:absolute;top:92px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:5px;align-items:center;max-width:calc(100vw - 48px);padding:13px 25px;background:#faf0d8f2;border:1px solid #b89a56;color:#644d25;box-shadow:0 5px 22px #3b311d30;pointer-events:none;text-align:center}
+.sh-chamber .sh-finale-caption strong{font:700 17px Georgia,serif;letter-spacing:1.7px}.sh-chamber .sh-finale-caption span{font:9px system-ui,sans-serif;letter-spacing:.5px;color:#6b674f}.sh-chamber .sh-finale-caption.sh-finale-liberal strong{color:#286d8c}.sh-chamber .sh-finale-caption.sh-finale-fascist strong{color:#9d4637}
+.sh-chamber .sh-seat-label.is-ceremony-winner{border-color:#bda04a;background:#fff3c9;box-shadow:0 0 0 2px #e4c76b55,0 3px 14px #85652a25}.sh-chamber .sh-seat-label.is-ceremony-winner .sh-actor-action{color:#78601f}.sh-chamber .sh-seat-label.is-ceremony-defeated{background:#c5c0b2;color:#514b42;border-color:#817968}.sh-chamber .sh-seat-label.is-ceremony-defeated .sh-actor-action{color:#665b4f}
+@media(max-width:700px){.sh-chamber .sh-finale-caption{top:109px;padding:9px 14px;max-width:90vw;width:280px}.sh-chamber .sh-finale-caption strong{font-size:13px;letter-spacing:1px}.sh-chamber .sh-finale-caption span{font-size:8px}}

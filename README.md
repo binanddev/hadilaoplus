@@ -1,3 +1,22 @@
+# Hội Kín · Hai game độc lập
+
+Trang chính cho chọn **Ngai Vàng / One King One Crown** hoặc **Secret Hitler**.
+Ngai Vàng giữ bộ luật hiện tại. Secret Hitler có mô-đun, bảng phòng, API, WebSocket,
+phiên lưu và cảnh 3D riêng; không dùng bộ xử lý bài/vàng của Ngai Vàng.
+
+- `#/crown`: Ngai Vàng.
+- `#/secret-hitler`: Secret Hitler, 5–10 người, luật theo PDF người dùng cung cấp.
+- `#/`: trở về trang chọn game. Phiên đang chơi được giữ để vào lại bằng cùng trình duyệt.
+
+Secret Hitler gồm nghị viện 3D, thẻ 2D trích từ bản Print & Play, vai trò riêng,
+bầu cử kín, lập pháp, phủ quyết, quyền tổng thống và chơi lại cùng phòng.
+Không có bot hoặc thoại tích hợp; trò chuyện trực tiếp hoặc dùng cuộc gọi riêng của nhóm.
+Xem [luật, cấu trúc và vận hành Secret Hitler](docs/SECRET_HITLER.md).
+
+Lệnh chạy cũ `run.bat` vẫn chuẩn bị và chạy cả website. Khi cập nhật bản có Secret Hitler,
+chạy migration như bình thường (`python manage.py migrate --noinput`) để tạo bảng phòng riêng.
+Không cần dịch vụ mới hoặc biến môi trường mới.
+
 # Vương miện & Phản bội
 
 Tên kho mã: **hadilaoplus** · nhánh chính của dự án: `minhtien`.

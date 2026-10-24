@@ -1,0 +1,20 @@
+import type {PresentationEvent} from './narration';
+export type Policy = 'liberal' | 'fascist';
+export type Role = Policy | 'hitler';
+export type Session = { code: string; player_id: string; token: string };
+export type Player = { id: string; name: string; seat: number; ready: boolean; alive: boolean; eliminated_office?: 'president'|'chancellor'|null; eliminated_office_slot?:number|null };
+export type Game = {
+  code: string; version: number; phase: 'lobby'|'nomination'|'voting'|'president_discard'|'chancellor_discard'|'veto'|'executive'|'finished';
+  players: Player[]; host_id: string; president_id: string|null; chancellor_id: string|null; nominee_id: string|null;
+  seated_president_id?: string|null; seated_chancellor_id?: string|null;
+  ballot_event?: {id:string;votes:Record<string,boolean>}|null;
+  presentation_event?: PresentationEvent|null;
+  execution_event?: {id:string;actor_id:string;target_id:string}|null;
+  liberal_policies: number; fascist_policies: number; election_tracker: number; round: number;
+  power: 'investigate'|'special_election'|'policy_peek'|'execution'|null; power_used: boolean; veto_unlocked: boolean; veto_rejected: boolean;
+  deck_count: number; discard_count: number; eligible_chancellors: string[]; eligible_targets: string[];
+  voted_ids: string[]; last_votes: Record<string, boolean>; role: Role|null; party: Policy|null;
+  known_roles: {id:string;role:Role}[]; hand: Policy[];
+  private_info: {type:string;target_id?:string;party?:Policy;policies?:Policy[]}[];
+  winner: Policy|null; win_reason: string; log: {id:string;text:string}[]; board_powers: (string|null)[];
+};

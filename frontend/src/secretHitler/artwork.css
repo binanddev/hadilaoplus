@@ -1,0 +1,4 @@
+.sh-app .sh-art-filters{position:absolute;pointer-events:none;overflow:hidden}
+.sh-app img[src*="liberal"],.sh-app img[src*="president.webp"]{filter:url(#sh-art-blue)!important;mix-blend-mode:normal!important}
+.sh-app img[src*="fascist"],.sh-app img[src*="role-hitler"],.sh-app img[src*="chancellor.webp"],.sh-app img[src*="ballot-nein"]{filter:url(#sh-art-red)!important;mix-blend-mode:normal!important}
+.sh-app img[src*="ballot-ja"]{filter:url(#sh-art-green)!important;mix-blend-mode:normal!important}
