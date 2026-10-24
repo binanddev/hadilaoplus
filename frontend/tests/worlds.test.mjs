@@ -37,6 +37,32 @@ for(const id of ['island','garden','abbey'])test(`${id}: build actual geometry, 
   assert.ok(kit.app.batcher._batchList.length>0,'Static scenery should batch');
  }finally{kit.dispose()}
 });
+
+for(const id of ['island','garden','abbey'])test(`${id}: local scenery batches reduce offscreen geometry without dropping content`,t=>{
+ const kit=offlineScene();
+ try{
+  buildWorld(id,kit);const group=kit.app.batcher.getGroupByName('static '+id);
+  const candidates=()=>kit.app.batcher.getBatches(group.id).map(batch=>batch.meshInstance);
+  const triangles=meshes=>meshes.reduce((sum,mi)=>sum+mi.mesh.primitive[0].count/3,0);
+  const visibleTriangles=meshes=>{
+   let sum=0;
+   for(let i=0;i<8;i++){
+    const angle=i*Math.PI/4,eye=new pc.Vec3(Math.sin(angle)*4.55,2.4,Math.cos(angle)*4.55);
+    const projection=new pc.Mat4().setPerspective(68,16/9,.08,110);
+    const view=new pc.Mat4().setLookAt(eye,new pc.Vec3(0,1.27,0),pc.Vec3.UP).invert();
+    const frustum=new pc.Frustum();frustum.setFromMat4(new pc.Mat4().mul2(projection,view));
+    sum+=triangles(meshes.filter(mi=>frustum.containsSphere({center:mi.aabb.center,radius:mi.aabb.halfExtents.length()})));
+   }
+   return sum;
+  };
+  const local=candidates(),total=triangles(local),localVisible=visibleTriangles(local);
+  group.maxAabbSize=80;kit.app.batcher.generate([group.id]);
+  const wide=candidates(),wideVisible=visibleTriangles(wide);
+  assert.equal(triangles(wide),total,'Every original triangle is retained');
+  assert.ok(localVisible<wideVisible,`${localVisible} should be lower than ${wideVisible}`);
+  t.diagnostic(`Across 8 seated views: ${wideVisible} -> ${localVisible} static triangles passing camera bounds`);
+ }finally{kit.dispose();}
+});
 test('all six detailed costumes build on articulated body parts and survive blinking/reduced motion',()=>{
  const k=offlineScene();
  try{const batch=k.app.batcher.addGroup('animated costumes',true,30);for(const kind of ['regent','rogue','scholar','knight','merchant','jester']){

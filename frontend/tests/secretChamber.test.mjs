@@ -9,6 +9,8 @@ import * as artwork from '../src/secretHitler/artwork.ts';
 import * as finale from '../src/secretHitler/finale.ts';
 import * as cameraSettings from '../src/secretHitler/cameraSettings.ts';
 import {createSceneDisposer} from '../src/secretHitler/sceneLifecycle.ts';
+import * as sceneRendering from '../src/sceneRendering.ts';
+import * as sceneGeometry from '../src/sceneGeometry.ts';
 
 const require=createRequire(import.meta.url);
 const source=readFileSync(new URL('../src/secretHitler/Chamber.tsx',import.meta.url),'utf8');
@@ -31,11 +33,11 @@ function scene(props){
  setGlobal('Image',class{naturalWidth=32;naturalHeight=32;set src(value){} });
  setGlobal('ResizeObserver',class{observe(){}disconnect(){}});
  class OfflineApplication extends pc.AppBase{
-  constructor(canvas){super(canvas);const options=new pc.AppOptions();options.graphicsDevice=new pc.NullGraphicsDevice(canvas);options.componentSystems=[pc.RenderComponentSystem,pc.CameraComponentSystem,pc.LightComponentSystem];options.resourceHandlers=[];this.init(options);app=this;}
+  constructor(canvas,configuration){super(canvas);assert.equal(configuration.graphicsDeviceOptions.powerPreference,'high-performance');const options=new pc.AppOptions();options.graphicsDevice=new pc.NullGraphicsDevice(canvas);options.componentSystems=[pc.RenderComponentSystem,pc.CameraComponentSystem,pc.LightComponentSystem];options.resourceHandlers=[];options.batchManager=pc.BatchManager;this.init(options);app=this;}
   start(){}setCanvasResolution(){}resizeCanvas(){}
  }
  const hooks={useRef(value){const ref={current:refIndex++===0?canvas:value};refs.push(ref);return ref;},useState(value){return[typeof value==='function'?value():value,()=>{}];},useEffect(callback){effects.push(callback);}};
- const fakeRequire=name=>name==='react'?hooks:name==='playcanvas'?{...pc,Application:OfflineApplication}:name==='./spatial'?spatial:name==='./artwork'?artwork:name==='./finale'?finale:name==='./cameraSettings'?cameraSettings:name==='./sceneLifecycle'?{createSceneDisposer}:name.endsWith('.css')?{}:require(name);
+ const fakeRequire=name=>name==='react'?hooks:name==='playcanvas'?{...pc,Application:OfflineApplication}:name==='./spatial'?spatial:name==='./artwork'?artwork:name==='./finale'?finale:name==='./cameraSettings'?cameraSettings:name==='./sceneLifecycle'?{createSceneDisposer}:name==='../sceneRendering'?sceneRendering:name==='../sceneGeometry'?sceneGeometry:name.endsWith('.css')?{}:require(name);
  const module={exports:{}};
  const restore=()=>{for(const [key,descriptor]of globals){if(descriptor)Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];}};
  try{
@@ -47,6 +49,23 @@ function scene(props){
 }
 const players=Array.from({length:5},(_,seat)=>({id:`p${seat}`,name:`Player ${seat}`,seat,alive:true}));
 const initial={players,myId:'p0',phase:'nomination',snapshotEpoch:1,seatHeight:1};
+
+test('chamber batches fixed architecture while keeping policy boards, office chairs and effects dynamic',t=>{
+ const harness=scene(initial);
+ try{
+  harness.update(initial,3);
+  const group=harness.app.batcher.getGroupByName('chamber architecture and delegate chairs');
+  const batches=harness.app.batcher.getBatches(group.id);
+  const original=batches.reduce((sum,batch)=>sum+batch.origMeshInstances.length,0);
+  assert.ok(original>batches.length*2);
+  t.diagnostic(`Chamber fixed geometry: ${original} separate meshes -> ${batches.length} static submissions`);
+  for(const name of ['original fascist board','enacted liberal policy','enacted fascist policy','flying enacted policy','table pistol slide','moving sealed card packet']){
+   assert.equal(harness.app.root.findByName(name).render.batchGroupId,-1,`${name} must retain independent visibility/material/transform`);
+  }
+  const chair=harness.app.root.findByName('president end chair');
+  assert.equal(chair.findByName('chair seat').render.batchGroupId,-1);
+ }finally{harness.destroy();}
+});
 
 test('real chamber renders first-person eye and switches eliminated viewer to observer camera',()=>{
  const harness=scene(initial);

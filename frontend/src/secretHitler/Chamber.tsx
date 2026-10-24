@@ -2,6 +2,8 @@ import {useEffect,useRef,useState} from 'react';
 import * as pc from 'playcanvas';
 import './chamber.css';
 import {createSceneDisposer} from './sceneLifecycle';
+import {configureSceneRendering,SCENE_GRAPHICS_OPTIONS} from '../sceneRendering';
+import {batchStaticGeometry,configureSceneLighting,createDetailPrimitives} from '../sceneGeometry';
 import {colorizedArtworkSource} from './artwork';
 import {BASE_EYE_HEIGHT,seatEyeHeight} from './cameraSettings';
 import {finaleBeat,finaleDuration,finaleShotTimes,FINALE_TIMING,type FinalePlan} from './finale';
@@ -20,14 +22,15 @@ export function Chamber(props:ChamberProps){
  const shoot=()=>{if(props.finale)return;if(canShootTarget(props.myId,props.selectedId,!!props.gunArmed,props.players,props.eligibleTargetIds||[])&&!moving)props.onShoot?.(props.selectedId!)};
  useEffect(()=>{
   const canvas=canvasRef.current!;let app:pc.Application;
-  try{app=new pc.Application(canvas,{graphicsDeviceOptions:{antialias:true,alpha:false}})}catch{setFailed(true);return}
+  try{app=new pc.Application(canvas,{graphicsDeviceOptions:{...SCENE_GRAPHICS_OPTIONS}})}catch{setFailed(true);return}
   setFailed(false);
-  app.graphicsDevice.maxPixelRatio=Math.min(window.devicePixelRatio,1.5);app.setCanvasResolution(pc.RESOLUTION_AUTO);
+  const disposeRendering=configureSceneRendering(app);app.setCanvasResolution(pc.RESOLUTION_AUTO);
   app.scene.ambientLight=new pc.Color(.66,.65,.59);app.scene.exposure=1.45;
   const materials=new Set<pc.StandardMaterial>(),textures=new Set<pc.Texture>(),pendingImages=new Set<HTMLImageElement>();let disposed=false;
   const group=(name:string,parent:pc.Entity=app.root)=>{const e=new pc.Entity(name);parent.addChild(e);return e};
   const mat=(color:string,metal=0,glow=0)=>{const m=new pc.StandardMaterial();m.diffuse=new pc.Color().fromString(color);m.useMetalness=true;m.metalness=metal;m.gloss=.35;if(glow){m.emissive=m.diffuse.clone();m.emissiveIntensity=glow}m.update();materials.add(m);return m};
-  const mesh=(name:string,type:Shape,p:number[],s:number[],m:pc.StandardMaterial,parent:pc.Entity=app.root)=>{const e=group(name,parent);e.addComponent('render',{type,material:m});e.setLocalPosition(p[0],p[1],p[2]);e.setLocalScale(s[0],s[1],s[2]);return e};
+  const primitives=createDetailPrimitives(app),staticMeshes:pc.Entity[]=[];let collectStatic=true;
+  const mesh=(name:string,type:Shape,p:number[],s:number[],m:pc.StandardMaterial,parent:pc.Entity=app.root)=>{const e=group(name,parent);primitives.addRender(e,type,s,m);e.setLocalPosition(p[0],p[1],p[2]);e.setLocalScale(s[0],s[1],s[2]);if(collectStatic)staticMeshes.push(e);return e};
   const oak=mat('#85654b'),walnut=mat('#543c2c'),wood=mat('#af895f'),brass=mat('#c5a76d',.7),felt=mat('#44645b'),cream=mat('#efe7d4'),dark=mat('#37403b'),red=mat('#bc6550'),blue=mat('#7ba8b5'),plaster=mat('#d4cfbc'),white=mat('#f2eee0'),glass=mat('#c0d8dd',0,.3),black=mat('#252b2b'),steel=mat('#606b70',.8);
   const paper=(name:string,subtitle:string,color:string,bg='#eee5cf',symbol='')=>{
    const source=document.createElement('canvas');source.width=1024;source.height=512;const c=source.getContext('2d')!;
@@ -54,6 +57,7 @@ export function Chamber(props:ChamberProps){
   const fill=group('soft daylight');fill.addComponent('light',{type:'directional',color:new pc.Color(.9,.96,1),intensity:.8});fill.setEulerAngles(50,140,0);
   mesh('table apron','box',[0,1.34,0],[6.9,.4,10.8],walnut);mesh('table top','box',[0,1.52,0],[7,.22,10.5],wood);mesh('brass table edge','box',[0,1.65,0],[6.75,.025,10.25],brass);mesh('inset green felt','box',[0,1.675,0],[6.55,.025,10.03],felt);
   for(const x of [-2.4,2.4])for(const z of [-3.7,3.7])mesh('carved table leg','box',[x,.7,z],[.4,1.5,.4],walnut);
+  collectStatic=false;
   const liberalBoard=illustrated('/secret-hitler/board-liberal.webp',paper('LIBERAL','FIVE POLICIES TO FREEDOM','#31596b'));
   const fascistBoards=[5,7,9].map(n=>illustrated(`/secret-hitler/board-fascist-${n}.webp`,paper('FASCIST','SIX POLICIES TO POWER','#873f2e')));
   // Board surfaces use plane UVs, so the original print is visible once, on top only.
@@ -77,7 +81,7 @@ export function Chamber(props:ChamberProps){
    return root;
   };
   const chair=(pose:SeatPose,name:string)=>{const root=group(name);root.setPosition(pose.x,0,pose.z);root.setEulerAngles(0,pose.yaw,0);mesh('chair seat','box',[0,.68,.12],[.93,.16,.85],walnut,root);mesh('leather chair back','box',[0,1.25,.5],[.93,1.25,.2],felt,root);for(const x of [-.36,.36])for(const z of [-.2,.42])mesh('chair leg','box',[x,.32,z],[.1,.64,.1],walnut,root);return root};
-  for(let i=0;i<10;i++)chair(delegateSeat(i),`delegate chair ${i}`);
+  collectStatic=true;for(let i=0;i<10;i++)chair(delegateSeat(i),`delegate chair ${i}`);collectStatic=false;
   const officeChairs:{x:number;z:number;entity:pc.Entity;hanging:pc.Entity}[]=[];for(const z of [-6.25,6.25])for(const x of [0,1.35,-1.35]){const entity=chair({x,z,yaw:facingCenter({x,z})},z<0?'president end chair':'chancellor end chair');entity.enabled=x===0;const hanging=coat(`hanging ${z<0?'president':'chancellor'} coat ${x}`,z<0?'president':'chancellor',entity);hanging.setLocalPosition(0,1.38,.56);hanging.setLocalScale(.88,.88,.88);officeChairs.push({x,z,entity,hanging})}
   const plaqueP=illustrated('/secret-hitler/president.webp',paper('PRESIDENT','TỔNG THỐNG','#292c27')),plaqueC=illustrated('/secret-hitler/chancellor.webp',paper('CHANCELLOR','THỦ TƯỚNG','#292c27'));
   const endP=mesh('president office plaque','box',[0,1.84,-4.95],[1.55,.36,.08],plaqueP);endP.setEulerAngles(0,180,0);mesh('chancellor office plaque','box',[0,1.84,4.95],[1.55,.36,.08],plaqueC);
@@ -246,9 +250,10 @@ export function Chamber(props:ChamberProps){
    presentCeremony(data,dt);
    flight=Math.max(0,flight-dt*.7);movingCard.enabled=flight>0&&!data.reduced;if(movingCard.enabled){const u=1-flight,v=u*u*(3-2*u);movingCard.setPosition(pc.math.lerp(-1.2,flightTarget.x,v),1.79+Math.sin(u*Math.PI)*1.1,pc.math.lerp(-3.7,flightTarget.z,v));movingCard.setEulerAngles(0,(1-v)*150,Math.sin(u*Math.PI)*15)}
   });
+  batchStaticGeometry(app,staticMeshes,'chamber architecture and delegate chairs');configureSceneLighting(app);
   const resize=()=>app.resizeCanvas(canvas.clientWidth||window.innerWidth,canvas.clientHeight||window.innerHeight);const observer=new ResizeObserver(resize);observer.observe(canvas);app.start();resize();
   const disposeScene=createSceneDisposer(app,materials,textures);
-  return()=>{disposed=true;observer.disconnect();pendingImages.forEach(image=>{image.onload=null;image.onerror=null;image.src=''});pendingImages.clear();canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);canvas.removeEventListener('lostpointercapture',cancel);canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('contextmenu',context);window.removeEventListener('keydown',key);disposeScene()};
+  return()=>{disposed=true;disposeRendering();primitives.dispose();observer.disconnect();pendingImages.forEach(image=>{image.onload=null;image.onerror=null;image.src=''});pendingImages.clear();canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);canvas.removeEventListener('lostpointercapture',cancel);canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('contextmenu',context);window.removeEventListener('keydown',key);disposeScene()};
  },[]);
  return <div className={`sh-chamber ${props.gunArmed?'is-armed':''} ${spectating?'is-spectating':''} ${props.finale?'is-finale':''}`} ><canvas ref={canvasRef} aria-label="Phòng nghị viện 3D. Giữ chuột phải hoặc kéo trên màn hình cảm ứng để nhìn quanh."/>{failed&&<div className="sh-chamber-fallback"><strong>Phòng nghị viện</strong><p>Thiết bị chưa mở được cảnh 3D. Bạn vẫn có thể chơi bằng các bảng điều khiển.</p><div>{props.players.map(p=><span key={p.id}>{p.name}</span>)}</div></div>}<div className="sh-staff-labels">{[0,1].map(index=><div key={index} className="sh-staff-label" ref={element=>{if(element)staffLabels.current.set(index,element);else staffLabels.current.delete(index)}}>Thư ký kiểm phiếu</div>)}</div><div className="sh-seat-labels">{props.players.map(p=><button type="button" key={p.id} ref={el=>{if(el)labels.current.set(p.id,el);else labels.current.delete(p.id)}} className={`sh-seat-label ${p.id===props.selectedId?'is-selected':''} ${p.alive===false?'is-dead':''} ${props.selectable?'is-selectable':''}`} disabled={!props.selectable||p.alive===false||moving||(props.gunArmed&&!props.eligibleTargetIds?.includes(p.id))} onClick={()=>choose(p.id)}><span>{p.id===props.presidentId?'♜ ':p.id===props.chancellorId?'◆ ':''}{p.name}{p.id===props.myId?' · Bạn':''}</span><small>{p.alive===false?'ĐÃ BỊ LOẠI':p.id===props.presidentId?'TỔNG THỐNG':p.id===props.chancellorId?'THỦ TƯỚNG':p.ready?'SẴN SÀNG':'NGHỊ SĨ'}</small><em className="sh-actor-action">{props.actionLabels?.[p.id]||''}</em></button>)}</div>{props.finale&&<div className={`sh-finale-caption sh-finale-${props.finale.winner}`} role="status"><strong>{props.finale.winner==='liberal'?'PHE TỰ DO':'PHE PHÁT XÍT'} CHIẾN THẮNG</strong><span>Lễ công bố kết quả · Kéo để quan sát hội đồng</span></div>}{moving&&!props.finale&&<div className="sh-seating-caption" role="status">Hội đồng đang đổi ghế và mặc áo chức vụ · Bạn vẫn có thể nhìn quanh</div>}{props.gunArmed&&!moving&&!props.finale&&<div className="sh-gun-overlay"><span className="sh-crosshair" aria-hidden="true">+</span><div className="sh-fire-controls"><span>Chọn đại biểu để ngắm · nhấn lần nữa hoặc bấm cò</span><button disabled={!canShootTarget(props.myId,props.selectedId,true,props.players,props.eligibleTargetIds||[])} onClick={shoot}>Bóp cò{props.selectedId?` · ${props.players.find(p=>p.id===props.selectedId)?.name||''}`:''}</button></div></div>}<span className="sh-camera-hint">{thirdPerson?'GÓC NHÌN THỨ BA · GIỮ CHUỘT PHẢI ĐỂ XOAY · CUỘN ĐỂ THU PHÓNG':me?'GÓC NHÌN THỨ NHẤT · GIỮ CHUỘT PHẢI / KÉO ĐỂ NHÌN QUANH':'GIỮ CHUỘT PHẢI ĐỂ XOAY · CUỘN ĐỂ THU PHÓNG'}</span></div>;
 }

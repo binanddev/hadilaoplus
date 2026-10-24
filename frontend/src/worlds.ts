@@ -77,7 +77,7 @@ export function buildWorld(id:MapId,k:SceneKit){
   const mist=alpha('#9cadb6',.035);for(let i=0;i<5;i++){const cloud=orb('low drifting mist',[0,.4,-7],[6,.4,2.5],mist,moving('mist drift'));updates.push((t,r)=>cloud.setPosition(Math.sin((r?0:t*.035)+i*2)*11,.3+i*.07,-6+Math.cos(i*2)*6));}
  }
  // Static architecture batches separately from flags, wildlife, water and particles.
- const batch=app.batcher?.addGroup('static '+id,false,80);
+ const batch=app.batcher?.addGroup('static '+id,false,12);
  const batchWalk=(e:pc.Entity,dynamic=false)=>{const animated=dynamic||e.tags.has('moving-scenery');if(e.render&&!animated){e.render.batchGroupId=batch?.id??-1;e.render.castShadows=true;}for(const child of e.children)batchWalk(child as pc.Entity,animated);};
  batchWalk(root);app.batcher?.generate();
  return {root,update:(time:number,reduced:boolean)=>{for(const update of updates)update(reduced?0:time,reduced);}};

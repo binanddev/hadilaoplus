@@ -55,6 +55,42 @@ Sáu nhân vật có thêm chi tiết mặt, ngón tay, phụ kiện và trang p
 Nút **Hiệu ứng: nhẹ** dừng chuyển động môi trường, chớp mắt và các hạt trang trí.
 Các cảnh không thêm nhạc hay âm thanh nền và không thay đổi luật.
 
+Cả hai game giới hạn vẽ cảnh 3D ở 30 FPS và mật độ điểm ảnh tối đa 1,0 để giảm
+tải GPU; chữ và nút giao diện vẫn theo độ phân giải của trình duyệt. Nhân vật,
+bản đồ, camera, ánh sáng và các hoạt ảnh được giữ nguyên. Chỉ giới hạn số lần vẽ,
+không giảm nhịp cập nhật diễn biến. Tab bị ẩn sẽ ngừng vẽ và vẽ lại khi quay về;
+kết nối trận đấu vẫn hoạt động theo cơ chế hiện có.
+
+Kiến trúc, mặt bàn và ghế cố định được gộp theo từng vùng nhỏ để giảm lượt vẽ
+và bỏ qua phần ngoài góc camera. Ghế chức vụ, nhân vật, bài và các hiệu ứng vẫn
+giữ khả năng chuyển động/ẩn hiện độc lập. Chi tiết hình cầu rất nhỏ dùng chung
+lưới nhẹ hơn; mặt, thân người và các vật thể lớn giữ lưới ban đầu. Ngân sách ánh
+sáng được tính từ toàn bộ đèn của cảnh, kể cả đèn chớp đang tắt, thay vì dành
+sẵn chỗ cho 255 đèn; bóng nắng/trăng và các nguồn sáng hiện có vẫn được giữ.
+
+### Ưu tiên card đồ họa rời trên laptop Windows
+
+Cả hai game gửi yêu cầu `powerPreference: high-performance` lúc khởi tạo 3D.
+Đây là gợi ý cho trình duyệt, không thể ép Windows chuyển sang NVIDIA. Phiên bản
+PlayCanvas hiện tại cũng đã mặc định dùng gợi ý này; khai báo rõ trong game giúp
+giữ chủ đích đó khi đổi cấu hình hoặc nâng cấp engine.
+
+Nếu Task Manager vẫn cho thấy Intel chịu tải còn NVIDIA không chạy:
+
+1. Mở **Settings → System → Display → Graphics** (Windows 10: **Graphics settings**).
+2. Thêm hoặc chọn đúng trình duyệt đang chơi, ví dụ Chrome, Edge hoặc Cốc Cốc.
+3. Chọn **Options → High performance**, kiểm tra tên GPU là **NVIDIA**, rồi lưu.
+4. Lưu công việc ở các tab khác, thoát hoàn toàn trình duyệt rồi mở lại game.
+5. Trong Task Manager, xem **GPU engine** của tiến trình trình duyệt và đối chiếu
+   với tên card ở trang **Performance** để xác nhận GPU thực sự được dùng.
+
+Thiết lập này áp dụng cho cả trình duyệt, không riêng trang game. Card rời có
+thể dùng nhiều điện hơn. Nếu trình duyệt đã tắt tăng tốc đồ họa, bật lại mục
+**Use graphics acceleration when available** trong cài đặt hệ thống của trình duyệt.
+
+Tham khảo: [Windows Graphics](https://support.microsoft.com/en-us/windows/hardware/display-graphics/optimizations-for-windowed-games-in-windows-11),
+[NVIDIA: quyền chọn GPU của Windows](https://www.nvidia.com/content/Control-Panel-Help/vLatest/en-us/mergedProjects/3D%20Settings/Setting_the_Preferred_Graphics_Processor.htm).
+
 Chỉ chuẩn bị môi trường, không mở server: `py run.py --setup-only`.
 
 Để thử nhiều người trên một máy: mở các hồ sơ trình duyệt khác nhau hoặc cửa sổ thường và riêng tư.
