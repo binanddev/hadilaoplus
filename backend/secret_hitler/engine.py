@@ -4,6 +4,7 @@ Secrets exist only in persisted state; snapshot is an explicit public allowlist.
 """
 import copy
 import secrets
+import time
 
 
 class RuleError(ValueError):
@@ -28,6 +29,8 @@ def new_state(name):
                 president_id=None, chancellor_id=None, nominee_id=None,
                 seated_president_id=None, seated_chancellor_id=None, execution_event=None,
                 ballot_event=None, presentation_event=None,
+                phase_started_at=time.time(), discussion_ends_at=None, discussion_next=None,
+                legislative_available_at=None,
                 liberal_policies=0, fascist_policies=0, election_tracker=0,
                 round=0, power=None, winner=None, win_reason='', votes={}, last_votes={},
                 deck=[], discard=[], hand=[], private_info={}, investigated=[],
@@ -89,7 +92,8 @@ def shuffle_deck(s):
 
 
 def win(s, team, reason):
-    s.update(phase='finished', winner=team, win_reason=reason, hand=[], power=None)
+    s.update(phase='finished', winner=team, win_reason=reason, hand=[], power=None,
+             discussion_ends_at=None, discussion_next=None, legislative_available_at=None)
     note(s, reason)
 
 
@@ -103,12 +107,37 @@ def next_round(s, chosen=None):
         chosen = ordered[0]['id']
         s['rotation_anchor'] = None
     s.update(phase='nomination', president_id=chosen, chancellor_id=None, nominee_id=None,
-             votes={}, hand=[], power=None, power_used=False, veto_rejected=False)
+             votes={}, hand=[], power=None, power_used=False, veto_rejected=False,
+             discussion_ends_at=None, discussion_next=None, legislative_available_at=None)
     s['round'] += 1
     note(s, f"Lượt {s['round']}: {get_player(s, chosen)['name']} đề cử chính phủ.")
 
 
-def enact(s, policy, chaos=False):
+def begin_discussion(s, continuation='nomination'):
+    """Persist the pause; the client cannot skip it or choose its continuation."""
+    now = time.time()
+    s.update(phase='discussion', phase_started_at=now, discussion_ends_at=now + 30,
+             discussion_next=continuation, hand=[], legislative_available_at=None)
+    note(s, 'Chính phủ có 30 giây giải trình trước hội đồng.')
+
+
+def advance_due(s, now=None):
+    now = time.time() if now is None else now
+    deadline = s.get('discussion_ends_at')
+    if s['phase'] != 'discussion' or deadline is None or now < deadline:
+        return False
+    continuation = s.get('discussion_next')
+    if continuation == 'executive':
+        s.update(phase='executive', discussion_ends_at=None, discussion_next=None)
+    else:
+        next_round(s)
+    s['phase_started_at'] = now
+    s['version'] += 1
+    s['presentation_event'] = dict(id=secrets.token_hex(12), kind='discussion_complete', actor_id=s['president_id'])
+    return True
+
+
+def enact(s, policy, chaos=False, discussion=False):
     s[f'{policy}_policies'] += 1
     s['election_tracker'] = 0
     note(s, ('Hỗn loạn: ' if chaos else '') + ('Luật Tự do được ban hành.' if policy == 'liberal' else 'Luật Phát xít được ban hành.'))
@@ -119,16 +148,21 @@ def enact(s, policy, chaos=False):
         win(s, 'fascist', 'Phe Phát xít thắng: đã ban hành 6 luật Phát xít.')
     elif policy == 'fascist' and not chaos and board(s)[s['fascist_policies'] - 1]:
         s.update(phase='executive', power=board(s)[s['fascist_policies'] - 1], power_used=False)
+        begin_discussion(s, 'executive')
+    elif not chaos or discussion:
+        begin_discussion(s)
     else:
         next_round(s)
 
 
-def inactive_government(s):
+def inactive_government(s, discussion=False):
     s['election_tracker'] += 1
     if s['election_tracker'] == 3:
         s['last_president_id'] = s['last_chancellor_id'] = None
         require(bool(s['deck']), 'Bộ luật đã hết.')
-        enact(s, s['deck'].pop(0), chaos=True)
+        enact(s, s['deck'].pop(0), chaos=True, discussion=discussion)
+    elif discussion:
+        begin_discussion(s)
     else:
         next_round(s)
 
@@ -236,7 +270,7 @@ def _apply(s, pid, data):
                 note(s, 'Tổng thống đồng ý phủ quyết. Tăng bộ đếm bầu cử.')
                 shuffle_deck(s)
                 # Keep existing tracker: an election alone does not enact a policy.
-                inactive_government(s)
+                inactive_government(s, discussion=True)
                 shuffle_deck(s)
             else:
                 s.update(phase='chancellor_discard', veto_rejected=True)
@@ -318,6 +352,9 @@ def apply(s, pid, data):
     # A rejected action must never partially modify persisted room state.
     draft = copy.deepcopy(s)
     _apply(draft, pid, data)
+    if draft['phase'] != s['phase']:
+        draft['phase_started_at'] = time.time()
+        draft['legislative_available_at'] = draft['phase_started_at'] + 10 if draft['phase'] == 'president_discard' else None
     draft['presentation_event'] = presentation_event(s, draft, pid, data)
     draft['version'] += 1
     draft['seen_actions'].setdefault(pid, []).append(action_id)
@@ -338,7 +375,10 @@ def snapshot(s, pid, code):
                   seated_chancellor_id=s.get('seated_chancellor_id', s.get('last_chancellor_id')),
                   execution_event=copy.deepcopy(s.get('execution_event')),
                   ballot_event=copy.deepcopy(s.get('ballot_event')),
-                  presentation_event=copy.deepcopy(s.get('presentation_event')))
+                  presentation_event=copy.deepcopy(s.get('presentation_event')),
+                  phase_started_at=s.get('phase_started_at'),
+                  discussion_ends_at=s.get('discussion_ends_at'),
+                  legislative_available_at=s.get('legislative_available_at'), server_time=time.time())
     people = []
     for p in s['players']:
         public_player = {k: p[k] for k in ('id', 'name', 'seat', 'ready', 'alive')}

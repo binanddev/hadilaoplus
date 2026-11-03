@@ -73,7 +73,7 @@ export function Chamber(props:ChamberProps){
   for(const z of [-4.6,4.6]){mesh('banker lamp base','cylinder',[0,1.78,z],[.55,.12,.35],brass);mesh('banker lamp stem','cylinder',[0,2.05,z],[.055,.5,.055],brass);mesh('green glass lamp shade','sphere',[0,2.35,z],[1,.3,.42],felt);mesh('warm lamp underside','box',[0,2.23,z],[.72,.025,.23],mat('#fff1c0',0,.4));light([0,2.3,z],'#fff1ca',1.5,8)}
   const officeNavy=mat('#234f77'),officeWine=mat('#8f3f38'),coatLining=mat('#e2c47d'),staffUniform=mat('#29424b'),staffSkin=mat('#c99f7c');
   type Office='president'|'chancellor';
-  const DRESS_SECONDS=1.05;
+  const DRESS_SECONDS=2;
   const coat=(name:string,office:Office,parent:pc.Entity)=>{
    const root=group(name,parent),cloth=office==='president'?officeNavy:officeWine;
    for(const side of [-1,1]){mesh('tailored coat front','box',[side*.205,.08,-.255],[.32,.76,.13],cloth,root);mesh('long coat tail','box',[side*.2,-.4,.08],[.34,.55,.14],cloth,root);mesh('gold coat lapel','box',[side*.115,.28,-.34],[.095,.4,.045],coatLining,root).setLocalEulerAngles(0,0,side*23);mesh('coat sleeve','box',[side*.43,.02,-.08],[.24,.62,.25],cloth,root).setLocalEulerAngles(12,0,side*12);mesh('gold sleeve cuff','box',[side*.43,-.27,-.13],[.25,.065,.25],brass,root);mesh('gold shoulder braid','box',[side*.29,.48,-.025],[.25,.045,.2],brass,root)}

@@ -52,3 +52,36 @@ test('mute and cleanup stop active speech, queued speech and stale callbacks',()
  assert.equal(h.spoken.length,2);assert.equal(h.listeners.size,0);
  assert.equal(new ActionNarrator(undefined,()=>({})).supported,false);
 });
+
+const game=(version,phase,extra={})=>({code:'ROOM',version,phase,round:1,players,president_id:'a',chancellor_id:'b',nominee_id:'b',...extra});
+test('phase narration speaks invitations once and ignores individual ballot updates and old snapshots',()=>{
+ const h=harness();h.narrator.unlock();h.narrator.observeGame(game(1,'lobby'));
+ h.narrator.observeGame(game(2,'nomination'));
+ assert.match(h.spoken[0].text,/Xin kính mời An/);
+ h.spoken[0].onend();
+ h.narrator.observeGame(game(3,'voting'));
+ assert.match(h.spoken[1].text,/đã chọn Bình/);
+ h.spoken[1].onend();
+ h.narrator.observeGame(game(4,'voting',{presentation_event:event('v1')}));
+ h.narrator.observeGame(game(4,'voting',{presentation_event:event('v1')}));
+ h.narrator.observeGame(game(2,'nomination'));
+ assert.equal(h.spoken.length,2);
+ h.narrator.observeGame(game(5,'president_discard'));
+ assert.match(h.spoken[2].text,/Xin chúc mừng chính quyền/);
+ h.narrator.resetBaseline();h.narrator.observeGame(game(6,'chancellor_discard'));assert.equal(h.spoken.length,3);
+ h.narrator.dispose();
+});
+test('one speech engine has one owner; old controllers and callbacks cannot speak again',()=>{
+ const h=harness();h.narrator.unlock();h.narrator.observe(event('0'),players);h.narrator.observe(event('1'),players);
+ const stale=h.spoken[0].onend;
+ const second=new ActionNarrator(h.engine,()=>({}));second.unlock();second.observe(event('0'),players);
+ second.observe(event('2'),players);assert.equal(h.canceled(),1);assert.equal(h.spoken.length,2);
+ stale();h.narrator.observe(event('3'),players);assert.equal(h.spoken.length,2);
+ second.dispose();
+});
+test('reminders deduplicate keys and event history cannot replay a previous action',()=>{
+ const h=harness();h.narrator.unlock();h.narrator.observe(event('0'),players);h.narrator.observe(event('1'),players);h.spoken[0].onend();
+ h.narrator.observe(event('2'),players);h.spoken[1].onend();h.narrator.observe(event('1'),players);assert.equal(h.spoken.length,2);
+ h.narrator.remind('turn:1','Đề nghị tổng thống đưa ra quyết định.');h.narrator.remind('turn:1','Đề nghị tổng thống đưa ra quyết định.');assert.equal(h.spoken.length,3);
+ h.spoken[2].onend();h.narrator.remind('turn:2','Đề nghị tổng thống đưa ra quyết định.');assert.equal(h.spoken.length,4);h.narrator.dispose();
+});

@@ -18,6 +18,7 @@ export function buildActionLabels(game:PublicStatus):Record<string,string> {
     else if(game.phase==='veto'&&president)action='đang trả lời đề nghị phủ quyết';
     else if(game.phase==='veto'&&chancellor)action='đang chờ quyết định phủ quyết';
     else if(game.phase==='executive'&&president)action=game.power_used?'đang cất hồ sơ kín':game.power==='execution'?'đang chọn người hành quyết':game.power==='investigate'?'đang điều tra đảng tịch':game.power==='special_election'?'đang chỉ định tổng thống đặc biệt':'đang xem ba chính sách';
+    else if(game.phase==='discussion')action=president||chancellor?'đang giải trình lựa chọn chính sách':'đang lắng nghe chính phủ giải trình';
     else if(game.phase==='finished')action='đang xem kết quả ván chơi';
     labels[player.id]=`${subject} ${action}`;
   }

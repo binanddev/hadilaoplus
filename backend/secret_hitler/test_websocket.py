@@ -3,6 +3,7 @@
 No HTTP/WebSocket listener, browser, or development server is started.
 """
 from urllib.parse import quote
+import time
 
 from channels.db import database_sync_to_async
 from channels.testing import WebsocketCommunicator
@@ -13,6 +14,33 @@ from .models import SecretRoom
 
 
 class SecretHitlerWebsocketTests(TransactionTestCase):
+    async def test_discussion_expires_and_broadcasts_without_client_action(self):
+        from . import engine
+        sessions = await self.room()
+        def prepare():
+            room = SecretRoom.objects.get(code=sessions[0]['code'])
+            room.state.update(president_id=sessions[0]['player_id'], round=1)
+            engine.begin_discussion(room.state)
+            room.state['discussion_ends_at'] = time.time() + .35
+            room.save()
+        await database_sync_to_async(prepare)()
+        clients = [self.socket_client(s['code'], s['token']) for s in sessions[:2]]
+        try:
+            for client in clients:
+                self.assertTrue((await client.connect())[0])
+                self.assertEqual((await client.receive_json_from())['state']['phase'], 'discussion')
+            states = await self.receive_states(clients)
+            for state in states:
+                self.assertEqual(state['phase'], 'nomination')
+                self.assertEqual(state['president_id'], sessions[1]['player_id'])
+                self.assertEqual(state['round'], 2)
+                self.assertIsNone(state['discussion_ends_at'])
+            persisted = await database_sync_to_async(services.read)(sessions[0]['code'], sessions[0]['token'])
+            self.assertEqual(persisted['round'], 2)
+        finally:
+            for client in clients:
+                await client.disconnect()
+
     def socket_client(self, code, token, legacy=False):
         from crown.asgi import application
         namespace = '' if legacy else 'secret-hitler/'
@@ -114,7 +142,8 @@ class SecretHitlerWebsocketTests(TransactionTestCase):
             clients[chancellor_index] = resumed
             disconnected.remove(chancellor_index)
             after = (await resumed.receive_json_from())['state']
-            self.assertEqual(after, before)
+            self.assertEqual({k: v for k, v in after.items() if k != 'server_time'},
+                             {k: v for k, v in before.items() if k != 'server_time'})
 
             # A replayed request cannot discard another card after reconnect.
             states = await self.action(clients, chancellor_index, 'discard', 'chancellor-discard', index=0)
@@ -190,7 +219,8 @@ class SecretHitlerWebsocketTests(TransactionTestCase):
             self.assertTrue(await secret_client.receive_nothing(timeout=0.1))
             self.assertTrue(await old_client.receive_nothing(timeout=0.1))
             after = await database_sync_to_async(services.read)(secret['code'], secret['token'])
-            self.assertEqual(after, before)
+            self.assertEqual({k: v for k, v in after.items() if k != 'server_time'},
+                             {k: v for k, v in before.items() if k != 'server_time'})
         finally:
             await secret_client.disconnect()
             await old_client.disconnect()

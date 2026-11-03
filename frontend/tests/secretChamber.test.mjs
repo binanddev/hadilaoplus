@@ -89,7 +89,7 @@ test('real chamber moves elected officials, finishes seating and gates the held 
   harness.update(props,2);
   const elected={...props,presidentId:'p0',chancellorId:'p1',phase:'president_discard'};
   harness.update(elected,1);assert.ok(changes.includes(true));
-  harness.update(elected,100);assert.equal(changes.at(-1),false);
+  harness.update(elected,210);assert.equal(changes.at(-1),false);
   const president=harness.app.root.findByName('delegate p0').getPosition();
   assert.ok(Math.abs(president.x)<.01&&Math.abs(president.z+6.25)<.01);
   const gun=harness.app.root.findByName('first person pistol');assert.equal(gun.enabled,false);
@@ -152,7 +152,11 @@ test('officials finish walking and dressing before the action gate opens',()=>{
   const hanging=harness.app.root.findByName('hanging president coat 0');
   assert.equal(hanging.enabled,true);
   const elected={...props,presidentId:'p0',chancellorId:'p1',phase:'president_discard'};
-  harness.update(elected,64);
+  harness.update(elected,100);
+  assert.equal(changes.at(-1),true,'The slower walk still occupies the first four seconds');
+  const walking=harness.app.root.findByName('delegate p0').getPosition();
+  assert.ok(Math.hypot(walking.x,walking.z+6.25)>.1,'The president is still approaching the office chair');
+  harness.update(elected,60);
   assert.equal(changes.at(-1),true,'Dressing continues after the walk ends');
   harness.update(elected,50);
   assert.equal(changes.at(-1),false);

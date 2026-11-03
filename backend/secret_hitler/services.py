@@ -56,7 +56,18 @@ def read(code, token):
     with locked_room(code) as room:
         pid = engine.authenticate(room.state, token)
         engine.require(pid, 'Phiên Secret Hitler không hợp lệ.')
+        if engine.advance_due(room.state):
+            room.save()
         return engine.snapshot(room.state, pid, room.code)
+
+
+def advance(code):
+    """Called by server timers. A row lock makes simultaneous timers harmless."""
+    with locked_room(code) as room:
+        changed = engine.advance_due(room.state)
+        if changed:
+            room.save()
+        return changed
 
 
 def mutate(code, token, data):

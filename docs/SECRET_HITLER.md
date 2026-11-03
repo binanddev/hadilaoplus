@@ -160,3 +160,11 @@ cùng một lỗi. Đây không phải cơ chế bỏ qua mất kết nối: n�
 giao diện báo mất kết nối và tự thử lại. Lỗi backend như `ECONNREFUSED`,
 `ECONNRESET` và lỗi API vẫn giữ đầy đủ chẩn đoán. Rời phòng chủ động gửi mã đóng
 bình thường `1000` và hủy các lần thử lại của phiên cũ.
+
+
+### Nhịp hội đồng và lời dẫn
+
+- Một bộ đọc lời dẫn sở hữu bộ máy giọng nói trong mỗi trang. Các bản cập nhật trùng/cũ bị bỏ qua; tải lại và kết nối lại chỉ dựng trạng thái, không đọc lại diễn biến cũ. Tab ẩn dừng lời nói. Trong ván, lời dẫn theo chuyển bước, không đọc từng người bỏ phiếu để tránh dồn lời.
+- Chính quyền được tín nhiệm có tiếng chuông chúc mừng và khoảng ba giây vỗ tay tổng hợp, có thể tắt bằng nút âm thanh. Không thêm nhạc nền. Việc đi ghế kéo dài sáu giây, mặc áo hai giây; thời gian ổn định chính quyền trước lựa chọn là mười giây.
+- Mỗi lượt chọn thẻ có đồng hồ nhắc 20 giây, sau đó lặp lại 20 giây và nhắc đúng chức vụ/tên. Đây là lời nhắc, không tự chọn thẻ và không loại người quá giờ. Đồng hồ dùng thời gian máy chủ; quay lại phòng không đọc dồn những lời nhắc đã bỏ lỡ.
+- Sau khi ban hành chính sách hoặc đồng ý phủ quyết, chính quyền có 30 giây giải trình. Máy chủ lưu thời hạn và tự chuyển bước, kể cả khi tải lại trang. Quyền hành pháp vẫn được thực hiện sau giải trình; nếu luật vừa ban hành kết thúc ván thì công bố thắng ngay. Chính sách hỗn loạn do ba cuộc bầu cử thất bại không tạo chính quyền giải trình.

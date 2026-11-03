@@ -5,7 +5,7 @@ export type ExecutionEvent = { id: string; actor_id: string; target_id: string }
 export function officeSeat(office:'president'|'chancellor',slot=0):SeatPose {const x=[0,1.35,-1.35][slot]??2.7;const z=office==='president'?-6.25:6.25;return{x,z,yaw:Math.atan2(x,z)*180/Math.PI};}
 const HALF_X = 5.2, HALF_Z = 7.0;
 const WIDTH = HALF_X * 2, DEPTH = HALF_Z * 2, PERIMETER = 2 * (WIDTH + DEPTH);
-export const SEATING_SECONDS = 2.4;
+export const SEATING_SECONDS = 6;
 export function facingCenter(point: Point): number { return Math.atan2(point.x, point.z) * 180 / Math.PI; }
 export function delegateSeat(index: number): SeatPose {
   const side = index % 2 === 0 ? -1 : 1;

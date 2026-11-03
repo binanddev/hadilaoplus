@@ -4,8 +4,9 @@ export type Role = Policy | 'hitler';
 export type Session = { code: string; player_id: string; token: string };
 export type Player = { id: string; name: string; seat: number; ready: boolean; alive: boolean; eliminated_office?: 'president'|'chancellor'|null; eliminated_office_slot?:number|null };
 export type Game = {
-  code: string; version: number; phase: 'lobby'|'nomination'|'voting'|'president_discard'|'chancellor_discard'|'veto'|'executive'|'finished';
+  code: string; version: number; phase: 'lobby'|'nomination'|'voting'|'president_discard'|'chancellor_discard'|'veto'|'executive'|'discussion'|'finished';
   players: Player[]; host_id: string; president_id: string|null; chancellor_id: string|null; nominee_id: string|null;
+  phase_started_at?:number; server_time?:number; discussion_ends_at?:number|null; legislative_available_at?:number|null;
   seated_president_id?: string|null; seated_chancellor_id?: string|null;
   ballot_event?: {id:string;votes:Record<string,boolean>}|null;
   presentation_event?: PresentationEvent|null;
