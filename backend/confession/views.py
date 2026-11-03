@@ -8,6 +8,22 @@ from .models import ConfessionRoom
 
 @csrf_exempt
 @require_POST
+def enter_public(request):
+    try:
+        if len(request.body) > 4096:
+            raise ValueError('Yêu cầu quá dài.')
+        body = json.loads(request.body)
+        if not isinstance(body, dict):
+            raise ValueError('Yêu cầu không hợp lệ.')
+        return JsonResponse(services.enter_public(body.get('name'), body.get('avatar', 0), body.get('gender'), body.get('token')))
+    except ValueError as error:
+        return JsonResponse({'error':str(error)}, status=400)
+    except TypeError:
+        return JsonResponse({'error':'Thông tin nhân vật không hợp lệ.'}, status=400)
+
+
+@csrf_exempt
+@require_POST
 def enter(request, code=None):
     try:
         if len(request.body) > 4096:

@@ -1,4 +1,4 @@
-export type Person={id:string;name:string;avatar:number;gentle:boolean};
+export type Person={id:string;name:string;avatar:number;gentle:boolean;gender?:'male'|'female';seat?:number};
 export type Effect={id:string;actor:string;kind:string;at:number};
 export type State={players:Person[];queue:string[];phase:'waiting'|'arrival'|'confession'|'verdict';speaker:string|null;deadline:number;round:number;text:string;effects:Effect[];result:null|{kind:'heaven'|'hell'|'tie';heaven:number;hell:number;same:number};now:number;heaven:number|null;hell:number|null;same:number};
 export type Session={id:string;token:string;code:string};

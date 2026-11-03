@@ -4,13 +4,15 @@ import secrets
 REACTIONS = ('water', 'egg', 'heart', 'lightning', 'same', 'doubt')
 
 
-def player(name, avatar=0):
+def player(name, avatar=0, gender='male'):
     if not isinstance(name, str) or not name.strip() or len(name.strip()) > 24:
         raise ValueError('Tên cần từ 1 đến 24 ký tự.')
     if type(avatar) is not int or not 0 <= avatar < 8:
         raise ValueError('Nhân vật không hợp lệ.')
+    if gender not in ('male', 'female'):
+        raise ValueError('Hãy chọn Nam hoặc Nữ.')
     return dict(id=secrets.token_hex(8), token=secrets.token_urlsafe(32), name=name.strip(),
-                avatar=avatar, draft='', gentle=True, seen=0, last_batch=0)
+                avatar=avatar, gender=gender, seat=0, draft='', gentle=True, seen=0, last_batch=0)
 
 
 def new_state(person):
@@ -35,6 +37,8 @@ def advance(s, now):
                  result=dict(heaven=heaven, hell=hell, same=len(s['empathy']),
                              kind='heaven' if heaven > hell else 'hell' if hell > heaven else 'tie'))
     if s['phase'] == 'verdict' and now >= s['deadline']:
+        if s.get('shared') and s['speaker'] in online and s['speaker'] not in s['queue']:
+            s['queue'].append(s['speaker'])
         s.update(phase='waiting', speaker=None, deadline=0, text='', effects=[])
     s['effects'] = [e for e in s['effects'] if now-e['at'] < 2][-60:]
 
@@ -44,6 +48,10 @@ def act(s, p, data, now):
     p['seen'] = now
     action = data.get('action')
     if action == 'ping':
+        return
+    if action == 'leave':
+        p['seen'] = 0
+        s['queue'] = [pid for pid in s['queue'] if pid != p['id']]
         return
     if action == 'draft':
         value = data.get('text', '')
@@ -86,7 +94,7 @@ def act(s, p, data, now):
 
 def public(s, now):
     hidden = s['phase'] == 'confession' and s['deadline']-now <= 5
-    return dict(players=[{k:p[k] for k in ('id', 'name', 'avatar', 'gentle')} for p in s['players']
+    return dict(players=[dict({k:p[k] for k in ('id', 'name', 'avatar', 'gentle')}, gender=p.get('gender', 'male'), seat=p.get('seat', i)) for i,p in enumerate(s['players'])
                          if now-p['seen'] < 35 or p['id'] == s['speaker']],
                 queue=s['queue'], phase=s['phase'], speaker=s['speaker'], deadline=s['deadline'],
                 round=s['round'], text=s['text'], effects=s['effects'], result=s['result'], now=now,

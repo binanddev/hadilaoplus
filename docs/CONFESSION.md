@@ -5,16 +5,16 @@ Chạy migration bằng `python manage.py migrate --noinput` (run.bat đã làm 
 
 ## Chơi
 
-- Chọn một trong 8 nhân vật, tạo phòng hoặc nhập mã 6 ký tự. Tối đa 100 ghế.
+- Chọn Nam/Nữ và một trong 8 kiểu nhân vật, vào cùng một khán phòng chung. Không tạo phòng, không nhập mã; tối đa 100 ghế, xếp 10 hàng × 10 chỗ như rạp chiếu phim.
 - Soạn riêng tối đa 150 từ phân cách bằng khoảng trắng, đồng thời tối đa 3.000 ký tự.
   Lời đã lưu tự công khai khi bắt đầu giai đoạn thú tội; bản nháp không có trong snapshot công khai.
-- Đăng ký tự nguyện theo FIFO, rút tên được; không bán quyền chen hàng.
+- Vào khán phòng là tự xếp hàng FIFO. Hết lượt, người còn online quay lại cuối hàng; có thể tạm nghỉ khi đang chờ. Đến lượt xuất hiện dưới hào quang trên sân khấu trong 5 giây.
 - Máy chủ quyết định lượt 5s lên bục, 20s thú tội, 5s kết án. Phòng tự chạy khi có người đăng ký.
 - Một người một phiếu được đổi; người trên bục không tự bỏ phiếu. Năm giây cuối giấu tỷ lệ.
 - Đồng cảm độc lập phiếu bầu. Hòa hoặc không có phiếu được xử “chưa đủ bằng chứng”.
 - Nhẹ tay chặn trứng/sét trên máy chủ. Các biểu cảm đều là câu có sẵn.
 - Kết nối lại giữ phiên trong tab. Ghế vắng quá 35s không hiển thị/không được gọi;
-  ghế hết hạn sau 180s có thể được thay thế khi có người mới vào.
+  phòng chung thu hồi ghế vắng sau 35s hoặc khi bấm Rời phòng, giữ nguyên vị trí các ghế khác.
 
 ## Mic
 
@@ -35,7 +35,7 @@ WebRTC peer đã bị người dùng sửa client; chưa dùng mic cho môi trư
 
 ## Kỹ thuật và vận hành
 
-Ứng dụng Django `confession`, bảng `ConfessionRoom`, API `/api/confession/rooms/`,
+Ứng dụng Django `confession`, bảng `ConfessionRoom`, API vào phòng chung `/api/confession/enter/` (hàng DB duy nhất `PUBLIC`),
 WebSocket `/ws/confession/rooms/{code}/`. Token ghế chỉ cấp cho chủ ghế.
 Các mutation khóa hàng DB, giờ tuyệt đối trên máy chủ, từ chối phiếu trễ/sai lượt.
 Client gộp phản ứng mỗi 500ms, tối đa 4 biểu cảm/batch, máy chủ giới hạn tần suất.
@@ -46,7 +46,7 @@ Giới hạn client batching không có nghĩa chỉ có 1–2 request/s toàn p
 Nhiều ASGI worker cần Redis như hai game cũ. Mỗi worker hiện có publisher riêng;
 production lớn nên đưa publisher và tick vào một room coordinator duy nhất.
 Chưa benchmark tải 100 máy, chưa có bot, bộ lọc nội dung tự do, báo cáo/kick hay hệ thống tài khoản.
-Ưu tiên phòng riêng nhóm bạn; không triển khai như phòng công cộng không giám sát.
+Phòng chung chưa có công cụ báo cáo/kick hoặc kiểm duyệt nội dung tự do; cần bổ sung trước khi mở rộng cho cộng đồng không có người giám sát.
 
 ## Kiểm tra
 
