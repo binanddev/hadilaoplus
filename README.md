@@ -1,11 +1,13 @@
-# Hội Kín · Hai game độc lập
+# Hội Kín · Ba game độc lập
 
-Trang chính cho chọn **Ngai Vàng / One King One Crown** hoặc **Secret Hitler**.
+Trang chính cho chọn **Ngai Vàng / One King One Crown**, **Secret Hitler** hoặc **Tòa Miệng Đời**.
 Ngai Vàng giữ bộ luật hiện tại. Secret Hitler có mô-đun, bảng phòng, API, WebSocket,
 phiên lưu và cảnh 3D riêng; không dùng bộ xử lý bài/vàng của Ngai Vàng.
 
 - `#/crown`: Ngai Vàng.
 - `#/secret-hitler`: Secret Hitler, 5–10 người, luật theo PDF người dùng cung cấp.
+- `#/confession`: Tòa Miệng Đời, phòng 3D 1–100 ghế, lượt 30 giây, mic và bản nháp 150 chữ.
+  Xem [cách chơi và giới hạn thoại cho phòng đông](docs/CONFESSION.md).
 - `#/`: trở về trang chọn game. Phiên đang chơi được giữ để vào lại bằng cùng trình duyệt.
 
 Secret Hitler gồm nghị viện 3D, thẻ 2D trích từ bản Print & Play, vai trò riêng,

@@ -14,7 +14,7 @@ ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', 'local
 render_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '').strip()
 if render_hostname and render_hostname not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_hostname)
-INSTALLED_APPS = ['daphne', 'django.contrib.contenttypes', 'corsheaders', 'channels', 'game', 'secret_hitler']
+INSTALLED_APPS = ['daphne', 'django.contrib.contenttypes', 'corsheaders', 'channels', 'game', 'secret_hitler', 'confession']
 MIDDLEWARE = ['django.middleware.security.SecurityMiddleware', 'corsheaders.middleware.CorsMiddleware', 'django.middleware.common.CommonMiddleware']
 ROOT_URLCONF = 'crown.urls'
 ASGI_APPLICATION = 'crown.asgi.application'
