@@ -1,4 +1,4 @@
-# Tòa Miệng Đời
+# Thú tội
 
 Game thứ ba tại `#/confession`, độc lập với Ngai Vàng và Secret Hitler.
 Chạy migration bằng `python manage.py migrate --noinput` (run.bat đã làm bước này).
